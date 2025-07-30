@@ -20,19 +20,6 @@ A sophisticated React application for generating beautiful book cover patterns w
 - `Ctrl/Cmd + Z`: Undo (when implemented)
 - `Ctrl/Cmd + Shift + Z`: Redo (when implemented)
 
-## Running the app
-
-```bash
-npm install
-npm run dev
-```
-
-## Building the app
-
-```bash
-npm run build
-```
-
 ## Recent Improvements
 
 - ✅ **Build Optimization**: Reduced chunk sizes and improved loading performance
@@ -41,14 +28,3 @@ npm run build
 - ✅ **Loading States**: Better user feedback during pattern generation
 - ✅ **Toast Notifications**: Improved user feedback for actions
 - ✅ **Progress Indicators**: Visual feedback for long-running operations
-
-## Tech Stack
-
-- **Frontend**: React 18, Vite
-- **UI Components**: Radix UI, Tailwind CSS
-- **State Management**: React Hooks
-- **Build Tool**: Vite with optimized chunking
-- **Icons**: Lucide React
-- **Animations**: Framer Motion
-
-For more information and support, please contact Base44 support at app@base44.com.
