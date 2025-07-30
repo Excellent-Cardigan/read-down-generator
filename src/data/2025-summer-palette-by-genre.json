@@ -1,0 +1,80 @@
+{
+    "Kids & YA": [
+        "#FF8FB8",
+        "#FFC636",
+        "#FCF56F",
+        "#64ABFB",
+        "#C8EC64"
+    ],
+    "Mysteries & Thrillers": [
+        "#CF202A",
+        "#750029",
+        "#230F66",
+        "#005761",
+        "#554F46"
+    ],
+    "Historical Fiction": [
+        "#FF9B0D",
+        "#AD4900",
+        "#D97E00",
+        "#90BD11",
+        "#755F66"
+    ],
+    "Sci-Fi & Fantasy": [
+        "#573DE8",
+        "#4091ED",
+        "#098E9B",
+        "#DBD000",
+        "#9565DE"
+    ],
+    "Fiction": [
+        "#F24911",
+        "#3AABB1",
+        "#90BD11",
+        "#BA9DEC",
+        "#F7C57E"
+    ],
+    "Romance": [
+        "#ED5F93",
+        "#FFC636",
+        "#FF602B",
+        "#7CCFD4",
+        "#FFE4BC"
+    ],
+    "Nonfiction": [
+        "#C8EC64",
+        "#64ABFB",
+        "#FFD978",
+        "#005D81",
+        "#709900"
+    ],
+    "Women's Fiction": [
+        "#FF9B0D",
+        "#FF8FB8",
+        "#9565DE",
+        "#90BD11",
+        "#FFE4BC"
+    ],
+    "Book Club": [
+        "#BA9DEC",
+        "#7CCFD4",
+        "#FFE4BC",
+        "#FFD978",
+        "#B5AFA6"
+    ],
+    "New Books": [
+        "#F24911",
+        "#ED5F93",
+        "#FF8FB8",
+        "#573DE8",
+        "#3AABB1",
+        "#64ABFB"
+    ],
+    "Biographies & Memoirs": [
+        "#D97E00",
+        "#FFE4BC",
+        "#D5CFC6",
+        "#755F66",
+        "#005D81"
+    ]
+}
