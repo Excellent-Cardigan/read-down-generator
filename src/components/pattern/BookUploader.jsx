@@ -47,7 +47,8 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
         processed++;
         if (processed === uniqueFiles.length) {
           // All files processed, update state once with all new books
-          setBooks(prev => [...(Array.isArray(prev) ? prev : []), ...newBooks]);
+          const currentBooks = Array.isArray(books) ? books : [];
+          setBooks([...currentBooks, ...newBooks]);
           setIsLoading(false);
         }
       };
@@ -56,7 +57,8 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
         if (processed === uniqueFiles.length) {
           // All files processed (even with errors), update state with valid books
           if (newBooks.length > 0) {
-            setBooks(prev => [...(Array.isArray(prev) ? prev : []), ...newBooks]);
+            const currentBooks = Array.isArray(books) ? books : [];
+            setBooks([...currentBooks, ...newBooks]);
           }
           setIsLoading(false);
         }
@@ -86,17 +88,11 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
   }, [debouncedProcessFiles]);
 
   const removeBook = (indexToRemove) => {
-    if (!setBooks) return;
-    setBooks(prev => {
-      console.log('Removing book at index:', indexToRemove, 'from array of length:', prev?.length);
-      if (!Array.isArray(prev)) {
-        console.log('prev is not an array:', typeof prev, prev);
-        return prev;
-      }
-      const newArray = prev.filter((_, index) => index !== indexToRemove);
-      console.log('New array length:', newArray.length);
-      return newArray;
-    });
+    if (!setBooks || !Array.isArray(books)) return;
+    // Create new array without the removed book
+    const newBooks = books.filter((_, index) => index !== indexToRemove);
+    // Pass the new array directly (not a function) to the reducer
+    setBooks(newBooks);
   };
 
   const handleInputClick = () => {
