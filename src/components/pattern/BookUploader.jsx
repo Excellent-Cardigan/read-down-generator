@@ -88,8 +88,14 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
   const removeBook = (indexToRemove) => {
     if (!setBooks) return;
     setBooks(prev => {
-      if (!Array.isArray(prev)) return [];
-      return prev.filter((_, index) => index !== indexToRemove);
+      console.log('Removing book at index:', indexToRemove, 'from array of length:', prev?.length);
+      if (!Array.isArray(prev)) {
+        console.log('prev is not an array:', typeof prev, prev);
+        return prev;
+      }
+      const newArray = prev.filter((_, index) => index !== indexToRemove);
+      console.log('New array length:', newArray.length);
+      return newArray;
     });
   };
 
