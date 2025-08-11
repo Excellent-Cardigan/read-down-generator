@@ -9,8 +9,8 @@ const PatternPreview = React.memo(function PatternPreview({ patterns, isRenderin
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
 
   const isCollection = !!collections[selectedSizeKey];
-  const patternKeys = useMemo(() => isCollection ? collections[selectedSizeKey].sizes.map(s => `${s.width}x${s.height}`) : [selectedSizeKey], [isCollection, collections, selectedSizeKey]);
-  const currentPatterns = useMemo(() => patternKeys.map(key => patterns[key]).filter(Boolean), [patternKeys, patterns]);
+  const patternKeys = useMemo(() => isCollection ? (collections[selectedSizeKey]?.sizes || []).map(s => `${s.width}x${s.height}`) : [selectedSizeKey], [isCollection, collections, selectedSizeKey]);
+  const currentPatterns = useMemo(() => (patternKeys || []).map(key => patterns[key]).filter(Boolean), [patternKeys, patterns]);
 
   // NEW: Track the active size key and notify parent
   const activeSizeKey = patternKeys[activePreviewIndex] || patternKeys[0];

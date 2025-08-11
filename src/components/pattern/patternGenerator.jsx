@@ -36,7 +36,7 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
   const OBJECT_COUNT = 3 + Math.floor(nextRandom() * 118); // Random between 3 and 120
 
   // 1. Load all uploaded images from their source (File or URL)
-  const sourceImages = await Promise.all(uploadedImages.map(img => loadImage(img.source)));
+  const sourceImages = await Promise.all((uploadedImages || []).map(img => loadImage(img.source)));
 
   // 2. Create the master canvas
   const masterCanvas = document.createElement('canvas');
@@ -418,7 +418,7 @@ export async function generateBackgroundPattern(uploadedImages, objectColors, ba
     return currentSeed;
   };
   const OBJECT_COUNT = 3 + Math.floor(nextRandom() * 118);
-  const sourceImages = await Promise.all(uploadedImages.map(img => loadImage(img.source)));
+  const sourceImages = await Promise.all((uploadedImages || []).map(img => loadImage(img.source)));
   const masterCanvas = document.createElement('canvas');
   masterCanvas.width = MASTER_SIZE;
   masterCanvas.height = MASTER_SIZE;

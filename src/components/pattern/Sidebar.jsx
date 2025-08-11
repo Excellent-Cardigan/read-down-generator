@@ -113,10 +113,10 @@ function Sidebar({
 
   const isCollection = !!collections[selectedSizeKey];
   const patternKeys = useMemo(() => (
-    isCollection ? collections[selectedSizeKey].sizes.map(s => `${s.width}x${s.height}`) : [selectedSizeKey]
+    isCollection ? (collections[selectedSizeKey]?.sizes || []).map(s => `${s.width}x${s.height}`) : [selectedSizeKey]
   ), [isCollection, collections, selectedSizeKey]);
   const currentPatterns = useMemo(() => (
-    patternKeys.map(key => generatedPatterns[key]).filter(Boolean)
+    (patternKeys || []).map(key => generatedPatterns[key]).filter(Boolean)
   ), [patternKeys, generatedPatterns]);
   // Use activeSizeKey for all conditional logic
   const isHomepageSize = activeSizeKey === '1200x628';

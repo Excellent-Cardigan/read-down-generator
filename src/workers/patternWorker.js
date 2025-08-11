@@ -85,7 +85,7 @@ async function generateBackgroundPattern(uploadedImages, objectColors, backgroun
   const OBJECT_COUNT = 3 + Math.floor(nextRandom() * 118); // Random between 3 and 120
 
   // Load all uploaded images (use blob if available, fallback to source)
-  const sourceImages = await Promise.all(uploadedImages.map(img => loadImage(img.blob || img.source)));
+  const sourceImages = await Promise.all((uploadedImages || []).map(img => loadImage(img.blob || img.source)));
 
   // Create the master canvas
   const masterCanvas = new OffscreenCanvas(MASTER_SIZE, MASTER_SIZE);
