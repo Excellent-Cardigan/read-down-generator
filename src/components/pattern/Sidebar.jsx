@@ -81,6 +81,7 @@ function Sidebar({
   setImages,
   books,
   setBooks,
+  addBooks,
   onRender,
   isRendering,
   error,
@@ -363,7 +364,7 @@ function Sidebar({
               <Book className="w-5 h-5 text-muted-foreground" />
               <Label className="text-sm font-medium text-muted-foreground">Book Covers</Label>
             </div>
-            <BookUploader books={books || []} setBooks={setBooks} />
+            <BookUploader books={books || []} setBooks={setBooks} addBooks={addBooks} />
           </div>
         ) : null}
       </div>

@@ -430,6 +430,7 @@ export default function PatternGenerator() {
         setImages={actions.setImages}
         books={books}
         setBooks={actions.setBooks}
+        addBooks={actions.addBooks}
         onRender={handleSidebarRender}
         isRendering={isRendering}
         error={error}

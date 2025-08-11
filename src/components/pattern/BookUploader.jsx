@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) {
+const BookUploader = React.memo(function BookUploader({ books = [], setBooks, addBooks }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const debounceTimeout = useRef(null);
@@ -46,9 +46,14 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
         newBooks.push({ source: file, preview: e.target.result, name: file.name });
         processed++;
         if (processed === uniqueFiles.length) {
-          // All files processed, update state once with all new books
-          const currentBooks = Array.isArray(books) ? books : [];
-          setBooks([...currentBooks, ...newBooks]);
+          // All files processed, use addBooks to add new books to existing ones
+          if (addBooks) {
+            addBooks(newBooks);
+          } else {
+            // Fallback to setBooks if addBooks not available
+            const currentBooks = Array.isArray(books) ? books : [];
+            setBooks([...currentBooks, ...newBooks]);
+          }
           setIsLoading(false);
         }
       };
@@ -57,8 +62,13 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
         if (processed === uniqueFiles.length) {
           // All files processed (even with errors), update state with valid books
           if (newBooks.length > 0) {
-            const currentBooks = Array.isArray(books) ? books : [];
-            setBooks([...currentBooks, ...newBooks]);
+            if (addBooks) {
+              addBooks(newBooks);
+            } else {
+              // Fallback to setBooks if addBooks not available
+              const currentBooks = Array.isArray(books) ? books : [];
+              setBooks([...currentBooks, ...newBooks]);
+            }
           }
           setIsLoading(false);
         }
@@ -169,6 +179,7 @@ BookUploader.propTypes = {
     name: PropTypes.string,
   })),
   setBooks: PropTypes.func.isRequired,
+  addBooks: PropTypes.func,
 };
 
 export default BookUploader;

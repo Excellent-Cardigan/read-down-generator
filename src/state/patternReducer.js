@@ -17,6 +17,7 @@ export const PATTERN_ACTIONS = {
   SET_SELECTED_GENRE: 'SET_SELECTED_GENRE',
   SET_IMAGES: 'SET_IMAGES',
   SET_BOOKS: 'SET_BOOKS',
+  ADD_BOOKS: 'ADD_BOOKS',
   SET_PATTERN_SEED: 'SET_PATTERN_SEED',
   
   // Overlay Settings
@@ -115,6 +116,9 @@ export function patternReducer(state, action) {
     case PATTERN_ACTIONS.SET_BOOKS:
       return { ...state, books: action.payload };
       
+    case PATTERN_ACTIONS.ADD_BOOKS:
+      return { ...state, books: [...(Array.isArray(state.books) ? state.books : []), ...(Array.isArray(action.payload) ? action.payload : [])] };
+      
     case PATTERN_ACTIONS.SET_PATTERN_SEED:
       return { ...state, patternSeed: action.payload };
     
@@ -201,6 +205,7 @@ export const createActions = (dispatch) => ({
   setSelectedGenre: (genre) => dispatch({ type: PATTERN_ACTIONS.SET_SELECTED_GENRE, payload: genre }),
   setImages: (images) => dispatch({ type: PATTERN_ACTIONS.SET_IMAGES, payload: images }),
   setBooks: (books) => dispatch({ type: PATTERN_ACTIONS.SET_BOOKS, payload: books }),
+  addBooks: (books) => dispatch({ type: PATTERN_ACTIONS.ADD_BOOKS, payload: books }),
   setPatternSeed: (seed) => dispatch({ type: PATTERN_ACTIONS.SET_PATTERN_SEED, payload: seed }),
   
   // Overlay Actions
