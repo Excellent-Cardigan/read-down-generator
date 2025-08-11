@@ -34,30 +34,34 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
   const processFiles = (files) => {
     if (!setBooks) return;
     const uniqueFiles = deduplicate(files);
-    if (uniqueFiles.length === 0) return;
+    if (!uniqueFiles || uniqueFiles.length === 0) return;
+    
     setIsLoading(true);
+    let processed = 0;
+    const newBooks = [];
     
-    // Process all files and collect results
-    const filePromises = (uniqueFiles || []).map(file => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          resolve({ source: file, preview: e.target.result, name: file.name });
-        };
-        reader.onerror = () => {
-          resolve(null); // Resolve with null on error
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-    
-    // Wait for all files to be processed, then update state once
-    Promise.all(filePromises).then(results => {
-      const validBooks = (results || []).filter(book => book !== null);
-      if (validBooks.length > 0) {
-        setBooks(prev => [...(prev || []), ...validBooks]);
-      }
-      setIsLoading(false);
+    uniqueFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        newBooks.push({ source: file, preview: e.target.result, name: file.name });
+        processed++;
+        if (processed === uniqueFiles.length) {
+          // All files processed, update state once with all new books
+          setBooks(prev => [...(Array.isArray(prev) ? prev : []), ...newBooks]);
+          setIsLoading(false);
+        }
+      };
+      reader.onerror = () => {
+        processed++;
+        if (processed === uniqueFiles.length) {
+          // All files processed (even with errors), update state with valid books
+          if (newBooks.length > 0) {
+            setBooks(prev => [...(Array.isArray(prev) ? prev : []), ...newBooks]);
+          }
+          setIsLoading(false);
+        }
+      };
+      reader.readAsDataURL(file);
     });
   };
 
@@ -82,8 +86,11 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
   }, [debouncedProcessFiles]);
 
   const removeBook = (indexToRemove) => {
-    if (!setBooks || !Array.isArray(books)) return;
-    setBooks(books.filter((_, index) => index !== indexToRemove));
+    if (!setBooks) return;
+    setBooks(prev => {
+      if (!Array.isArray(prev)) return [];
+      return prev.filter((_, index) => index !== indexToRemove);
+    });
   };
 
   const handleInputClick = () => {
