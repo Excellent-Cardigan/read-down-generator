@@ -1,8 +1,11 @@
 import React, { useCallback, useState, useRef } from 'react';
+import PropTypes from 'prop-types';
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) {
+  // Debug logging to understand the books prop type
+  console.log('BookUploader - books type:', typeof books, 'isArray:', Array.isArray(books), 'value:', books);
   const [isDragActive, setIsDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const debounceTimeout = useRef(null);
@@ -24,30 +27,10 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragActive(false);
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/jpeg' || file.type === 'image/tiff' || file.type === 'image/jpg');
-    debouncedProcessFiles(files);
-  }, []);
-
-  const handleFileSelect = useCallback((e) => {
-    const files = Array.from(e.target.files).filter(file => file.type === 'image/jpeg' || file.type === 'image/tiff' || file.type === 'image/jpg');
-    debouncedProcessFiles(files);
-    e.target.value = '';
-  }, []);
-
   // Deduplicate by name and size
   const deduplicate = (newFiles) => {
-    const existing = new Set((books || []).map(book => book.name + '-' + (book.source.size || '')));
+    const existing = new Set(Array.isArray(books) ? books.map(book => book.name + '-' + (book.source.size || '')) : []);
     return newFiles.filter(file => !existing.has(file.name + '-' + file.size));
-  };
-
-  // Debounced file processing
-  const debouncedProcessFiles = (files) => {
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-    debounceTimeout.current = setTimeout(() => processFiles(files), 200);
   };
 
   const processFiles = (files) => {
@@ -74,8 +57,28 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
     });
   };
 
+  // Debounced file processing
+  const debouncedProcessFiles = useCallback((files) => {
+    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+    debounceTimeout.current = setTimeout(() => processFiles(files), 200);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/jpeg' || file.type === 'image/tiff' || file.type === 'image/jpg');
+    debouncedProcessFiles(files);
+  }, [debouncedProcessFiles]);
+
+  const handleFileSelect = useCallback((e) => {
+    const files = Array.from(e.target.files).filter(file => file.type === 'image/jpeg' || file.type === 'image/tiff' || file.type === 'image/jpg');
+    debouncedProcessFiles(files);
+    e.target.value = '';
+  }, [debouncedProcessFiles]);
+
   const removeBook = (indexToRemove) => {
-    if (!setBooks) return;
+    if (!setBooks || !Array.isArray(books)) return;
     setBooks(books.filter((_, index) => index !== indexToRemove));
   };
 
@@ -118,7 +121,7 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
       </div>
       <div className="grid grid-cols-4 gap-2 pt-1">
         <AnimatePresence>
-          {books.map((book, index) => (
+          {Array.isArray(books) ? books.map((book, index) => (
             <motion.div
               key={index}
               layout
@@ -139,10 +142,20 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
                 <X className="w-3 h-3" />
               </button>
             </motion.div>
-          ))}
+          )) : null}
         </AnimatePresence>
       </div>
     </div>
   );
 });
+
+BookUploader.propTypes = {
+  books: PropTypes.arrayOf(PropTypes.shape({
+    source: PropTypes.object,
+    preview: PropTypes.string,
+    name: PropTypes.string,
+  })),
+  setBooks: PropTypes.func.isRequired,
+};
+
 export default BookUploader;

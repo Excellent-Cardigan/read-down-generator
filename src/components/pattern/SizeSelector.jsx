@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function SizeSelector({ sizes, collections, selectedSizeKey, setSelectedSizeKey }) {
@@ -32,3 +32,10 @@ export default function SizeSelector({ sizes, collections, selectedSizeKey, setS
     </Select>
   );
 }
+
+SizeSelector.propTypes = {
+  sizes: PropTypes.object.isRequired,
+  collections: PropTypes.object.isRequired,
+  selectedSizeKey: PropTypes.string.isRequired,
+  setSelectedSizeKey: PropTypes.func.isRequired,
+};

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Pattern Craft</title>
+    <script>
+        // Single Page Apps for GitHub Pages
+        // https://github.com/rafgraph/spa-github-pages
+        // This script redirects from 404 pages to index.html with the route in the query string
+        var pathName = location.pathname.slice(1);
+        location.replace(
+            location.protocol + '//' + location.hostname + 
+            (location.port ? ':' + location.port : '') + 
+            location.pathname.split('/').slice(0, 2).join('/') + 
+            '/?/' + pathName + location.search
+        );
+    </script>
+</head>
+<body></body>
+</html>

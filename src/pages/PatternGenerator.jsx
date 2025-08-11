@@ -125,7 +125,7 @@ export default function PatternGenerator() {
     selectedSizeKey, colors, selectedGenre, images, books, isRendering, error,
     hasAutoRendered, emailVariant, overlayText, overlayStyle, patternSeed,
     fontSize, lineHeight, overlayAlpha, activeSizeKey, backgroundCache,
-    compositedPatterns, overlayColor
+    compositedPatterns, overlayColor, progress, progressMessage
   } = state;
   
   const canvasRefs = useRef([]);
@@ -189,6 +189,10 @@ export default function PatternGenerator() {
     actions.resetForNewRender();
     
     try {
+      // Initialize progress
+      actions.setProgress(5);
+      actions.setProgressMessage('Preparing pattern generation...');
+      
       const backgroundColor = colors[0];
       const objectColors = colors.slice(1);
       if (objectColors.length === 0) objectColors.push(backgroundColor);
@@ -208,6 +212,9 @@ export default function PatternGenerator() {
       // Use worker if available, otherwise fallback to main thread
       // Temporarily disable worker due to fetch issues
       if (!forceMainThread && isWorkerAvailable()) {
+        actions.setProgress(15);
+        actions.setProgressMessage('Preloading images for worker...');
+        
         // Pre-load images for worker (worker can't fetch external URLs)
         const preloadedImages = await Promise.all(images.map(async (img) => {
           try {
@@ -220,6 +227,9 @@ export default function PatternGenerator() {
           }
         }));
         
+        actions.setProgress(25);
+        actions.setProgressMessage('Preloading book covers...');
+        
         const preloadedBooks = await Promise.all((books || []).map(async (book) => {
           try {
             const response = await fetch(book.source);
@@ -230,6 +240,9 @@ export default function PatternGenerator() {
             return book; // fallback to original
           }
         }));
+        
+        actions.setProgress(40);
+        actions.setProgressMessage('Generating patterns with web worker...');
         
         // Use worker for batch generation
         const batchResult = await generatePatternBatch({
@@ -247,23 +260,41 @@ export default function PatternGenerator() {
           overlayAlpha: alphaToUse, // pass alpha
           batchOverlayColor: finalOverlayColor // pass the final overlay color
         });
+        
+        actions.setProgress(90);
+        actions.setProgressMessage('Finalizing patterns...');
         actions.setCompositedPatterns(batchResult);
       } else {
         // Fallback to main thread processing
+        actions.setProgress(30);
+        actions.setProgressMessage('Processing on main thread...');
+        
         const resolvedOverlayColor = finalOverlayColor ? resolveCssColor(finalOverlayColor) : null;
         
         // 1. Generate and cache backgrounds
+        actions.setProgress(40);
+        actions.setProgressMessage('Generating background patterns...');
+        
         const newBackgroundCache = {};
-        for (const size of targetSizes) {
+        for (let i = 0; i < targetSizes.length; i++) {
+          const size = targetSizes[i];
           const key = `${size.width}x${size.height}`;
+          actions.setProgress(40 + (i / targetSizes.length) * 30);
+          actions.setProgressMessage(`Generating ${size.name} background...`);
           newBackgroundCache[key] = await generateBackgroundPattern(images, objectColors, backgroundColor, size, patternSeed);
         }
         actions.setBackgroundCache(newBackgroundCache);
         
         // 2. Composite overlays for all sizes
+        actions.setProgress(70);
+        actions.setProgressMessage('Adding overlays and text...');
+        
         const newCompositedPatterns = {};
-        for (const size of targetSizes) {
+        for (let i = 0; i < targetSizes.length; i++) {
+          const size = targetSizes[i];
           const key = `${size.width}x${size.height}`;
+          actions.setProgress(70 + (i / targetSizes.length) * 20);
+          actions.setProgressMessage(`Compositing ${size.name}...`);
           newCompositedPatterns[key] = await compositeOverlayOnBackground({
             backgroundDataUrl: newBackgroundCache[key],
             size,
@@ -279,11 +310,26 @@ export default function PatternGenerator() {
             overlayAlpha: alphaToUse // pass alpha
           });
         }
+        
+        actions.setProgress(95);
+        actions.setProgressMessage('Finalizing patterns...');
         actions.setCompositedPatterns(newCompositedPatterns);
       }
+      
+      // Complete the progress
+      actions.setProgress(100);
+      actions.setProgressMessage('Pattern generation complete!');
+      
+      // Auto-hide progress after a short delay
+      setTimeout(() => {
+        actions.setProgress(0);
+        actions.setProgressMessage('Ready to generate...');
+      }, 1500);
     } catch (e) {
       console.error(e);
       actions.setError('An unexpected error occurred while rendering the pattern.');
+      actions.setProgress(0);
+      actions.setProgressMessage('Generation failed');
     } finally {
       actions.setIsRendering(false);
     }
@@ -416,8 +462,8 @@ export default function PatternGenerator() {
       </CanvasErrorBoundary>
       <ProgressIndicator
         isRendering={isRendering}
-        progress={isRendering ? 50 : 0}
-        message={(!forceMainThread && isWorkerAvailable()) ? "Generating patterns in background..." : "Generating patterns..."}
+        progress={progress}
+        message={progressMessage}
       />
     </div>
   );

@@ -20,7 +20,7 @@ import summerPaletteData from '../../data/2025-summer-palette-by-genre.json';
 import fallPaletteData from '../../data/2025-fall-palette-by-genre.json';
 
 const DownloadButtons = React.memo(function DownloadButtons({
-  currentPatterns, patternKeys, isCollection, isRendering, images, onRender
+  currentPatterns, patternKeys, isCollection
 }) {
   const handleBatchDownload = useCallback(async () => {
     if (currentPatterns.length === 1) {
@@ -61,12 +61,9 @@ const DownloadButtons = React.memo(function DownloadButtons({
 });
 
 DownloadButtons.propTypes = {
-  currentPatterns: PropTypes.arrayOf(PropTypes.any),
-  patternKeys: PropTypes.arrayOf(PropTypes.any),
-  isCollection: PropTypes.bool,
-  isRendering: PropTypes.bool,
-  images: PropTypes.arrayOf(PropTypes.any),
-  onRender: PropTypes.func,
+  currentPatterns: PropTypes.arrayOf(PropTypes.string).isRequired,
+  patternKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
+  isCollection: PropTypes.bool.isRequired,
 };
 
 function Sidebar({
@@ -79,7 +76,7 @@ function Sidebar({
   setColors,
   selectedGenre,
   onGenreChange,
-  genreColors,
+  // genreColors, // available but using currentPalette instead
   images,
   setImages,
   books,
@@ -99,7 +96,7 @@ function Sidebar({
   lineHeight,
   setLineHeight,
   overlayAlpha,
-  setOverlayAlpha,
+  // setOverlayAlpha, // parameter available but not currently used in this component
   onRenderWithAlpha,
 }) {
   const [paletteSeason, setPaletteSeason] = React.useState('Summer');

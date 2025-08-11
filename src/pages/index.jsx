@@ -43,8 +43,10 @@ function PagesContent() {
 }
 
 export default function Pages() {
+    const basename = process.env.NODE_ENV === 'production' ? '/read-down-generator' : '';
+    
     return (
-        <Router>
+        <Router basename={basename}>
             <PagesContent />
         </Router>
     );

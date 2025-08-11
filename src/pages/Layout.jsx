@@ -1,7 +1,7 @@
 
-import React from 'react';
+import PropTypes from 'prop-types';
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout({ children }) {
   return (
     <div>
       <style>{`
@@ -65,3 +65,7 @@ export default function Layout({ children, currentPageName }) {
     </div>
   );
 }
+
+Layout.propTypes = {
+  children: PropTypes.node.isRequired,
+};

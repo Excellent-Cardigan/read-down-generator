@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function GenreSelector({ selectedGenre, onGenreChange, genreColors }) {
@@ -32,3 +32,9 @@ export default function GenreSelector({ selectedGenre, onGenreChange, genreColor
     </Select>
   );
 }
+
+GenreSelector.propTypes = {
+  selectedGenre: PropTypes.string.isRequired,
+  onGenreChange: PropTypes.func.isRequired,
+  genreColors: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
+};

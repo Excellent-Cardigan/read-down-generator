@@ -488,7 +488,7 @@ export async function compositeOverlayOnBackground({
   size,
   overlayStyle,
   objectColors = [],
-  backgroundColor = '#ffffff',
+  // backgroundColor = '#ffffff', // unused parameter
   books = [],
   emailVariant = 'text',
   fontSize = 80,

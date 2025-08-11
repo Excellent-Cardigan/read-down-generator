@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { debounce } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -131,4 +132,10 @@ const ColorPalette = React.memo(function ColorPalette({ colors, setColors }) {
     </div>
   );
 });
+
+ColorPalette.propTypes = {
+  colors: PropTypes.arrayOf(PropTypes.string).isRequired,
+  setColors: PropTypes.func.isRequired,
+};
+
 export default ColorPalette;

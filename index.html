@@ -5,6 +5,18 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Read-Down Asset Maker</title>
+    <script>
+      // Single Page Apps for GitHub Pages
+      // Handle redirected routes from 404.html
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = decodeURIComponent(l.search.slice(1));
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
     <style>
       @font-face {
         font-family: 'Shift';

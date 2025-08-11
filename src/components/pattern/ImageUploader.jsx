@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef } from 'react';
-import { Button } from '@/components/ui/button'; 
+import PropTypes from 'prop-types'; 
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from '@/lib/utils';
@@ -7,7 +7,8 @@ import { debounce } from '@/lib/utils';
 const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const debounceTimeout = useRef(null);
+  // Debounce timeout is managed by the debounce utility
+  // const debounceTimeout = useRef(null);
 
   const handleDragEnter = useCallback((e) => {
     e.preventDefault();
@@ -26,23 +27,9 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
     e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragActive(false);
-    const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/png');
-    debouncedProcessFiles(files);
-  }, []);
-
-  const handleFileSelect = useCallback((e) => {
-    const files = Array.from(e.target.files).filter(file => file.type === 'image/png');
-    debouncedProcessFiles(files);
-    e.target.value = '';
-  }, []);
-
   // Deduplicate by name and size
   const deduplicate = (newFiles) => {
-    const existing = new Set(images.map(img => img.name + '-' + (img.source.size || '')));
+    const existing = new Set(Array.isArray(images) ? images.map(img => img.name + '-' + (img.source.size || '')) : []);
     return newFiles.filter(file => !existing.has(file.name + '-' + file.size));
   };
 
@@ -78,7 +65,22 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
   // Debounced file processing using shared debounce utility
   const debouncedProcessFiles = useRef(debounce(processFiles, 200)).current;
 
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'image/png');
+    debouncedProcessFiles(files);
+  }, [debouncedProcessFiles]);
+
+  const handleFileSelect = useCallback((e) => {
+    const files = Array.from(e.target.files).filter(file => file.type === 'image/png');
+    debouncedProcessFiles(files);
+    e.target.value = '';
+  }, [debouncedProcessFiles]);
+
   const removeImage = (indexToRemove) => {
+    if (!Array.isArray(images)) return;
     setImages(images.filter((_, index) => index !== indexToRemove));
   };
 
@@ -114,7 +116,7 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
       </div>
       <div className="grid grid-cols-4 gap-2 pt-1">
         <AnimatePresence>
-          {images.map((image, index) => (
+          {Array.isArray(images) ? images.map((image, index) => (
             <motion.div
               key={index}
               layout
@@ -132,10 +134,20 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
                 <X className="w-3 h-3" />
               </button>
             </motion.div>
-          ))}
+          )) : null}
         </AnimatePresence>
       </div>
     </div>
   );
 });
+
+ImageUploader.propTypes = {
+  images: PropTypes.arrayOf(PropTypes.shape({
+    source: PropTypes.object,
+    preview: PropTypes.string,
+    name: PropTypes.string,
+  })),
+  setImages: PropTypes.func.isRequired,
+};
+
 export default ImageUploader;

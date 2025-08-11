@@ -9,6 +9,8 @@ export const PATTERN_ACTIONS = {
   SET_IS_RENDERING: 'SET_IS_RENDERING',
   SET_ERROR: 'SET_ERROR',
   SET_HAS_AUTO_RENDERED: 'SET_HAS_AUTO_RENDERED',
+  SET_PROGRESS: 'SET_PROGRESS',
+  SET_PROGRESS_MESSAGE: 'SET_PROGRESS_MESSAGE',
   
   // Pattern Data
   SET_COLORS: 'SET_COLORS',
@@ -46,6 +48,8 @@ export const createInitialState = (GENRE_COLORS_OBJ, defaultImages, defaultBooks
   isRendering: false,
   error: null,
   hasAutoRendered: false,
+  progress: 0,
+  progressMessage: 'Ready to generate...',
   
   // Pattern Data
   colors: GENRE_COLORS_OBJ["Romance"],
@@ -91,6 +95,12 @@ export function patternReducer(state, action) {
       
     case PATTERN_ACTIONS.SET_HAS_AUTO_RENDERED:
       return { ...state, hasAutoRendered: action.payload };
+      
+    case PATTERN_ACTIONS.SET_PROGRESS:
+      return { ...state, progress: action.payload };
+      
+    case PATTERN_ACTIONS.SET_PROGRESS_MESSAGE:
+      return { ...state, progressMessage: action.payload };
     
     // Pattern Data Actions
     case PATTERN_ACTIONS.SET_COLORS:
@@ -183,6 +193,8 @@ export const createActions = (dispatch) => ({
   setIsRendering: (rendering) => dispatch({ type: PATTERN_ACTIONS.SET_IS_RENDERING, payload: rendering }),
   setError: (error) => dispatch({ type: PATTERN_ACTIONS.SET_ERROR, payload: error }),
   setHasAutoRendered: (rendered) => dispatch({ type: PATTERN_ACTIONS.SET_HAS_AUTO_RENDERED, payload: rendered }),
+  setProgress: (progress) => dispatch({ type: PATTERN_ACTIONS.SET_PROGRESS, payload: progress }),
+  setProgressMessage: (message) => dispatch({ type: PATTERN_ACTIONS.SET_PROGRESS_MESSAGE, payload: message }),
   
   // Pattern Data Actions
   setColors: (colors) => dispatch({ type: PATTERN_ACTIONS.SET_COLORS, payload: colors }),
