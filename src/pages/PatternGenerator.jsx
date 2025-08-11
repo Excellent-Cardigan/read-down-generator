@@ -216,7 +216,7 @@ export default function PatternGenerator() {
         actions.setProgressMessage('Preloading images for worker...');
         
         // Pre-load images for worker (worker can't fetch external URLs)
-        const preloadedImages = await Promise.all(images.map(async (img) => {
+        const preloadedImages = await Promise.all((images || []).map(async (img) => {
           try {
             const response = await fetch(img.source);
             const blob = await response.blob();

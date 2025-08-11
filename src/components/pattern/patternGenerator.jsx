@@ -138,7 +138,7 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
       }
 
       // Draw books AFTER overlay (on top)
-      const bookImages = await Promise.all(books.map(book => loadImage(book.source)));
+      const bookImages = await Promise.all((books || []).map(book => loadImage(book.source)));
       const BOOK_HEIGHT = 366;
       const BOOK_SPACING = 30;
       const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2; // Center vertically
@@ -547,7 +547,7 @@ export async function compositeOverlayOnBackground({
   // Homepage (1200x628) - books overlay
   if (size.width === 1200 && size.height === 628 && books.length > 0) {
     // Book covers logic (same as before)
-    const bookImages = await Promise.all(books.map(book => loadImage(book.source)));
+    const bookImages = await Promise.all((books || []).map(book => loadImage(book.source)));
     const BOOK_HEIGHT = 366;
     const BOOK_SPACING = 30;
     const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2;
