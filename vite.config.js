@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/pattern-craft-c187ec65/' : '/',
   plugins: [react()],
   server: {
     allowedHosts: true
