@@ -206,8 +206,8 @@ async function compositeOverlayOnBackground({
     }
     
     // Draw books AFTER overlay (on top)
-    if (books.length > 0) {
-      const bookImages = await Promise.all(books.map(book => loadImage(book.blob || book.source)));
+    if ((books || []).length > 0) {
+      const bookImages = await Promise.all((books || []).map(book => loadImage(book.blob || book.source)));
       const BOOK_HEIGHT = 366;
       const BOOK_SPACING = 30;
       const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2;

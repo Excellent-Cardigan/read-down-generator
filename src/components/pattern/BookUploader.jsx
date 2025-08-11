@@ -36,22 +36,28 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
     const uniqueFiles = deduplicate(files);
     if (uniqueFiles.length === 0) return;
     setIsLoading(true);
-    let processed = 0;
-    uniqueFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setBooks(prev => {
-          const next = [...(prev || []), { source: file, preview: e.target.result, name: file.name }];
-          processed++;
-          if (processed === uniqueFiles.length) setIsLoading(false);
-          return next;
-        });
-      };
-      reader.onerror = () => {
-        processed++;
-        if (processed === uniqueFiles.length) setIsLoading(false);
-      };
-      reader.readAsDataURL(file);
+    
+    // Process all files and collect results
+    const filePromises = uniqueFiles.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve({ source: file, preview: e.target.result, name: file.name });
+        };
+        reader.onerror = () => {
+          resolve(null); // Resolve with null on error
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+    
+    // Wait for all files to be processed, then update state once
+    Promise.all(filePromises).then(results => {
+      const validBooks = results.filter(book => book !== null);
+      if (validBooks.length > 0) {
+        setBooks(prev => [...(prev || []), ...validBooks]);
+      }
+      setIsLoading(false);
     });
   };
 

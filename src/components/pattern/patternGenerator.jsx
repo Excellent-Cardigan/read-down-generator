@@ -283,8 +283,8 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
       }
 
       // Draw books AFTER overlay (on top)
-      if (emailVariant === 'books' && books.length > 0 && overlayStyle !== 'none') {
-        const bookImages = await Promise.all(books.slice(0, 4).map(book => loadImage(book.source)));
+      if (emailVariant === 'books' && (books || []).length > 0 && overlayStyle !== 'none') {
+        const bookImages = await Promise.all((books || []).slice(0, 4).map(book => loadImage(book.source)));
         const gridGap = 30;
         const margin = 48; // Re-use margin from overlay calculation
         const rectX = margin;
@@ -641,8 +641,8 @@ export async function compositeOverlayOnBackground({
     }
 
     // Draw books AFTER overlay (on top) for emailVariant === 'books'
-    if (emailVariant === 'books' && books.length > 0) {
-      const bookImages = await Promise.all(books.slice(0, 4).map(book => loadImage(book.source)));
+    if (emailVariant === 'books' && (books || []).length > 0) {
+      const bookImages = await Promise.all((books || []).slice(0, 4).map(book => loadImage(book.source)));
       const gridGap = 30;
       const contentAreaX = rectX + gridGap;
       const contentAreaY = rectY + gridGap;
