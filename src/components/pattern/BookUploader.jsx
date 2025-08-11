@@ -4,8 +4,6 @@ import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) {
-  // Debug logging to understand the books prop type
-  console.log('BookUploader - books type:', typeof books, 'isArray:', Array.isArray(books), 'value:', books);
   const [isDragActive, setIsDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const debounceTimeout = useRef(null);
