@@ -30,7 +30,7 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
   // Deduplicate by name and size
   const deduplicate = (newFiles) => {
     const existing = new Set(Array.isArray(images) ? images.map(img => img.name + '-' + (img.source.size || '')) : []);
-    return newFiles.filter(file => !existing.has(file.name + '-' + file.size));
+    return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
   };
 
   // Move processFiles above debouncedProcessFiles
@@ -39,7 +39,7 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
     if (uniqueFiles.length === 0) return;
     setIsLoading(true);
     let processed = 0;
-    uniqueFiles.forEach(file => {
+    (uniqueFiles || []).forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new window.Image();

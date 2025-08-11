@@ -28,7 +28,7 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
   // Deduplicate by name and size
   const deduplicate = (newFiles) => {
     const existing = new Set(Array.isArray(books) ? books.map(book => book.name + '-' + (book.source.size || '')) : []);
-    return newFiles.filter(file => !existing.has(file.name + '-' + file.size));
+    return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
   };
 
   const processFiles = (files) => {
@@ -38,7 +38,7 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
     setIsLoading(true);
     
     // Process all files and collect results
-    const filePromises = uniqueFiles.map(file => {
+    const filePromises = (uniqueFiles || []).map(file => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -53,7 +53,7 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks }) 
     
     // Wait for all files to be processed, then update state once
     Promise.all(filePromises).then(results => {
-      const validBooks = results.filter(book => book !== null);
+      const validBooks = (results || []).filter(book => book !== null);
       if (validBooks.length > 0) {
         setBooks(prev => [...(prev || []), ...validBooks]);
       }
