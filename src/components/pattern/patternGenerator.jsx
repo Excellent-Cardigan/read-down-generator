@@ -284,7 +284,9 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
 
       // Draw books AFTER overlay (on top)
       if (emailVariant === 'books' && (books || []).length > 0 && overlayStyle !== 'none') {
-        const bookImages = await Promise.all((books || []).slice(0, 4).map(book => loadImage(book.source)));
+        // Support up to 5 books with flexible grid layout
+        const maxBooks = Math.min((books || []).length, 5);
+        const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
         const gridGap = 30;
         const margin = 48; // Re-use margin from overlay calculation
         const rectX = margin;
@@ -297,17 +299,46 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
         const contentAreaWidth = rectWidth - (gridGap * 2);
         const contentAreaHeight = rectHeight - (gridGap * 2);
 
-        const cellWidth = (contentAreaWidth - gridGap) / 2;
-        const cellHeight = (contentAreaHeight - gridGap) / 2;
+        // Adaptive grid: 2x2 for 1-4 books, 3x2 for 5 books
+        let cols, rows;
+        if (maxBooks <= 4) {
+          cols = 2;
+          rows = 2;
+        } else {
+          cols = 3;
+          rows = 2;
+        }
+
+        const cellWidth = (contentAreaWidth - gridGap * (cols - 1)) / cols;
+        const cellHeight = (contentAreaHeight - gridGap * (rows - 1)) / rows;
 
         // offscreenCanvas.width = bookWidth; // This line is now redundant as offscreenCanvas is global
         // offscreenCanvas.height = bookHeight; // This line is now redundant as offscreenCanvas is global
         // offscreenCtx.clearRect(0, 0, bookWidth, bookHeight); // This line is now redundant as offscreenCtx is global
 
         bookImages.forEach((bookImg, index) => {
-          if (index >= 4) return; // Only process up to 4 books
-          const row = Math.floor(index / 2);
-          const col = index % 2;
+          if (index >= maxBooks) return; // Only process up to maxBooks
+          
+          // Calculate grid position based on layout
+          let row, col;
+          if (maxBooks <= 4) {
+            // 2x2 grid
+            row = Math.floor(index / 2);
+            col = index % 2;
+          } else {
+            // 3x2 grid for 5 books
+            if (index < 3) {
+              // First row: books 0, 1, 2
+              row = 0;
+              col = index;
+            } else {
+              // Second row: books 3, 4 (centered)
+              row = 1;
+              col = index - 3;
+              // Center the bottom row by adding offset
+              col += 0.5; // This will center 2 books in a 3-column space
+            }
+          }
 
           let bookWidth, bookHeight;
           const bookAspectRatio = bookImg.width / bookImg.height;
@@ -325,22 +356,9 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
           const cellX = contentAreaX + col * (cellWidth + gridGap);
           const cellY = contentAreaY + row * (cellHeight + gridGap);
 
-          // Align books towards the center to create a fixed 30px gap
-          let bookX, bookY;
-
-          // Horizontal alignment
-          if (col === 0) { // Left column
-            bookX = cellX + cellWidth - bookWidth; // Align right
-          } else { // Right column
-            bookX = cellX; // Align left
-          }
-
-          // Vertical alignment
-          if (row === 0) { // Top row
-            bookY = cellY + cellHeight - bookHeight; // Align bottom
-          } else { // Bottom row
-            bookY = cellY; // Align top
-          }
+          // Center books in their cells (all books same size, no special alignment)
+          const bookX = cellX + (cellWidth - bookWidth) / 2;
+          const bookY = cellY + (cellHeight - bookHeight) / 2;
 
           // Create a new offscreen canvas for each book
           const offscreenCanvas = document.createElement('canvas');
@@ -642,20 +660,51 @@ export async function compositeOverlayOnBackground({
 
     // Draw books AFTER overlay (on top) for emailVariant === 'books'
     if (emailVariant === 'books' && (books || []).length > 0) {
-      const bookImages = await Promise.all((books || []).slice(0, 4).map(book => loadImage(book.source)));
+      // Support up to 5 books with flexible grid layout
+      const maxBooks = Math.min((books || []).length, 5);
+      const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
       const gridGap = 30;
       const contentAreaX = rectX + gridGap;
       const contentAreaY = rectY + gridGap;
       const contentAreaWidth = rectWidth - (gridGap * 2);
       const contentAreaHeight = rectHeight - (gridGap * 2);
 
-      const cellWidth = (contentAreaWidth - gridGap) / 2;
-      const cellHeight = (contentAreaHeight - gridGap) / 2;
+      // Adaptive grid: 2x2 for 1-4 books, 3x2 for 5 books
+      let cols, rows;
+      if (maxBooks <= 4) {
+        cols = 2;
+        rows = 2;
+      } else {
+        cols = 3;
+        rows = 2;
+      }
+
+      const cellWidth = (contentAreaWidth - gridGap * (cols - 1)) / cols;
+      const cellHeight = (contentAreaHeight - gridGap * (rows - 1)) / rows;
 
       bookImages.forEach((bookImg, index) => {
-        if (index >= 4) return; // Only process up to 4 books
-        const row = Math.floor(index / 2);
-        const col = index % 2;
+        if (index >= maxBooks) return; // Only process up to maxBooks
+        
+        // Calculate grid position based on layout
+        let row, col;
+        if (maxBooks <= 4) {
+          // 2x2 grid
+          row = Math.floor(index / 2);
+          col = index % 2;
+        } else {
+          // 3x2 grid for 5 books
+          if (index < 3) {
+            // First row: books 0, 1, 2
+            row = 0;
+            col = index;
+          } else {
+            // Second row: books 3, 4 (centered)
+            row = 1;
+            col = index - 3;
+            // Center the bottom row by adding offset
+            col += 0.5; // This will center 2 books in a 3-column space
+          }
+        }
 
         let bookWidth, bookHeight;
         const bookAspectRatio = bookImg.width / bookImg.height;
@@ -673,22 +722,9 @@ export async function compositeOverlayOnBackground({
         const cellX = contentAreaX + col * (cellWidth + gridGap);
         const cellY = contentAreaY + row * (cellHeight + gridGap);
 
-        // Align books towards the center to create a fixed 30px gap
-        let bookX, bookY;
-
-        // Horizontal alignment
-        if (col === 0) { // Left column
-          bookX = cellX + cellWidth - bookWidth; // Align right
-        } else { // Right column
-          bookX = cellX; // Align left
-        }
-
-        // Vertical alignment
-        if (row === 0) { // Top row
-          bookY = cellY + cellHeight - bookHeight; // Align bottom
-        } else { // Bottom row
-          bookY = cellY; // Align top
-        }
+        // Center books in their cells (all books same size, no special alignment)
+        const bookX = cellX + (cellWidth - bookWidth) / 2;
+        const bookY = cellY + (cellHeight - bookHeight) / 2;
 
         // Create a new offscreen canvas for each book
         const bookCanvas = document.createElement('canvas');
