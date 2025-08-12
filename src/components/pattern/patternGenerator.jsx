@@ -137,165 +137,69 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
         }
       }
 
-      // Draw books AFTER overlay (on top) - Support 5-book grid layout
+      // Draw books AFTER overlay (on top) - Single row layout for all book counts
       const maxBooks = Math.min((books || []).length, 5);
       const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
       
-      // Use grid layout for 5 books, single row for 4 or fewer
-      if (maxBooks <= 4) {
-        // Original single-row layout for 4 or fewer books
-        const BOOK_HEIGHT = 366;
-        const BOOK_SPACING = 30;
-        const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2; // Center vertically
+      // Single-row layout for all book counts (1-5 books)
+      const BOOK_HEIGHT = 366;
+      const BOOK_SPACING = 30;
+      const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2; // Center vertically
+      
+      // Calculate total width needed for all books
+      const bookWidths = bookImages.map(img => {
+        const aspectRatio = img.width / img.height;
+        return BOOK_HEIGHT * aspectRatio;
+      });
+      const totalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + (BOOK_SPACING * (bookImages.length - 1));
+      
+      // Start X position to center all books horizontally
+      let currentX = (size.width - totalWidth) / 2;
+      
+      // Draw each book in single row
+      bookImages.forEach((bookImg, index) => {
+        const bookWidth = bookWidths[index];
+
+        // Prepare the offscreen canvas with the rounded book image
+        offscreenCanvas.width = bookWidth;
+        offscreenCanvas.height = BOOK_HEIGHT;
+        offscreenCtx.clearRect(0, 0, bookWidth, BOOK_HEIGHT);
+
+        // Create a rounded rectangle clipping path
+        offscreenCtx.beginPath();
+        if (offscreenCtx.roundRect) {
+            offscreenCtx.roundRect(0, 0, bookWidth, BOOK_HEIGHT, 4);
+        } else {
+            // Fallback for browsers that don't support roundRect
+            offscreenCtx.moveTo(0 + 4, 0);
+            offscreenCtx.lineTo(0 + bookWidth - 4, 0);
+            offscreenCtx.arcTo(0 + bookWidth, 0, 0 + bookWidth, 0 + 4, 4);
+            offscreenCtx.lineTo(0 + bookWidth, 0 + BOOK_HEIGHT - 4);
+            offscreenCtx.arcTo(0 + bookWidth, 0 + BOOK_HEIGHT, 0 + bookWidth - 4, 0 + BOOK_HEIGHT, 4);
+            offscreenCtx.lineTo(0 + 4, 0 + BOOK_HEIGHT);
+            offscreenCtx.arcTo(0, 0 + BOOK_HEIGHT, 0, 0 + BOOK_HEIGHT - 4, 4);
+            offscreenCtx.lineTo(0, 0 + 4);
+            offscreenCtx.arcTo(0, 0, 0 + 4, 0, 4);
+            offscreenCtx.closePath();
+        }
+        offscreenCtx.clip();
+        offscreenCtx.drawImage(bookImg, 0, 0, bookWidth, BOOK_HEIGHT);
+
+        // Add gradient overlay with multiply blend mode
+        drawBookGradientOverlay(offscreenCtx, bookWidth, BOOK_HEIGHT);
         
-        // Calculate total width needed for all books
-        const bookWidths = bookImages.map(img => {
-          const aspectRatio = img.width / img.height;
-          return BOOK_HEIGHT * aspectRatio;
-        });
-        const totalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + (BOOK_SPACING * (bookImages.length - 1));
-        
-        // Start X position to center all books horizontally
-        let currentX = (size.width - totalWidth) / 2;
-        
-        // Draw each book in single row
-        bookImages.forEach((bookImg, index) => {
-          const bookWidth = bookWidths[index];
+        // Reset composite operation
+        offscreenCtx.globalCompositeOperation = 'source-over';
 
-          // Prepare the offscreen canvas with the rounded book image
-          offscreenCanvas.width = bookWidth;
-          offscreenCanvas.height = BOOK_HEIGHT;
-          offscreenCtx.clearRect(0, 0, bookWidth, BOOK_HEIGHT);
+        // Draw the processed book from offscreen canvas onto the main canvas
+        // with the specified shadow effect
+        cropCtx.save();
+        cropCtx.filter = BOOK_SHADOW;
+        cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
+        cropCtx.restore();
 
-          // Create a rounded rectangle clipping path
-          offscreenCtx.beginPath();
-          if (offscreenCtx.roundRect) {
-              offscreenCtx.roundRect(0, 0, bookWidth, BOOK_HEIGHT, 4);
-          } else {
-              // Fallback for browsers that don't support roundRect
-              offscreenCtx.moveTo(0 + 4, 0);
-              offscreenCtx.lineTo(0 + bookWidth - 4, 0);
-              offscreenCtx.arcTo(0 + bookWidth, 0, 0 + bookWidth, 0 + 4, 4);
-              offscreenCtx.lineTo(0 + bookWidth, 0 + BOOK_HEIGHT - 4);
-              offscreenCtx.arcTo(0 + bookWidth, 0 + BOOK_HEIGHT, 0 + bookWidth - 4, 0 + BOOK_HEIGHT, 4);
-              offscreenCtx.lineTo(0 + 4, 0 + BOOK_HEIGHT);
-              offscreenCtx.arcTo(0, 0 + BOOK_HEIGHT, 0, 0 + BOOK_HEIGHT - 4, 4);
-              offscreenCtx.lineTo(0, 0 + 4);
-              offscreenCtx.arcTo(0, 0, 0 + 4, 0, 4);
-              offscreenCtx.closePath();
-          }
-          offscreenCtx.clip();
-          offscreenCtx.drawImage(bookImg, 0, 0, bookWidth, BOOK_HEIGHT);
-
-          // Add gradient overlay with multiply blend mode
-          drawBookGradientOverlay(offscreenCtx, bookWidth, BOOK_HEIGHT);
-          
-          // Reset composite operation
-          offscreenCtx.globalCompositeOperation = 'source-over';
-
-          // Draw the processed book from offscreen canvas onto the main canvas
-          // with the specified shadow effect
-          cropCtx.save();
-          cropCtx.filter = BOOK_SHADOW;
-          cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
-          cropCtx.restore();
-
-          currentX += bookWidth + BOOK_SPACING;
-        });
-      } else {
-        // Grid layout for 5 books
-        const gridGap = 20;
-        const margin = 24; // Re-use margin from overlay calculation
-        const rectX = margin;
-        const rectY = margin;
-        const rectWidth = size.width - margin * 2;
-        const rectHeight = size.height - margin * 2;
-
-        const contentAreaX = rectX + gridGap;
-        const contentAreaY = rectY + gridGap;
-        const contentAreaWidth = rectWidth - (gridGap * 2);
-        const contentAreaHeight = rectHeight - (gridGap * 2);
-
-        // 3x2 grid for 5 books
-        const cols = 3;
-        const rows = 2;
-        const cellWidth = (contentAreaWidth - gridGap * (cols - 1)) / cols;
-        const cellHeight = (contentAreaHeight - gridGap * (rows - 1)) / rows;
-
-        bookImages.forEach((bookImg, index) => {
-          // Calculate grid position for 5 books in 3x2 layout
-          let row, col;
-          if (index < 3) {
-            // First row: books 0, 1, 2
-            row = 0;
-            col = index;
-          } else {
-            // Second row: books 3, 4 (centered)
-            row = 1;
-            col = index - 3;
-            // Center the bottom row by adding offset
-            col += 0.5; // This will center 2 books in a 3-column space
-          }
-
-          let bookWidth, bookHeight;
-          const bookAspectRatio = bookImg.width / bookImg.height;
-          const cellAspectRatio = cellWidth / cellHeight;
-
-          // Determine book dimensions to fit within cell while maintaining aspect ratio
-          if (bookAspectRatio > cellAspectRatio) {
-            bookWidth = cellWidth;
-            bookHeight = bookWidth / bookAspectRatio;
-          } else {
-            bookHeight = cellHeight;
-            bookWidth = bookHeight * bookAspectRatio;
-          }
-          
-          const cellX = contentAreaX + col * (cellWidth + gridGap);
-          const cellY = contentAreaY + row * (cellHeight + gridGap);
-
-          // Center books in their cells
-          const bookX = cellX + (cellWidth - bookWidth) / 2;
-          const bookY = cellY + (cellHeight - bookHeight) / 2;
-
-          // Create offscreen canvas for this book
-          const bookCanvas = document.createElement('canvas');
-          bookCanvas.width = bookWidth;
-          bookCanvas.height = bookHeight;
-          const bookCtx = bookCanvas.getContext('2d');
-
-          // Create a rounded rectangle clipping path
-          bookCtx.beginPath();
-          if (bookCtx.roundRect) {
-              bookCtx.roundRect(0, 0, bookWidth, bookHeight, 4);
-          } else {
-              // Fallback for browsers that don't support roundRect
-              bookCtx.moveTo(0 + 4, 0);
-              bookCtx.lineTo(0 + bookWidth - 4, 0);
-              bookCtx.arcTo(0 + bookWidth, 0, 0 + bookWidth, 0 + 4, 4);
-              bookCtx.lineTo(0 + bookWidth, 0 + bookHeight - 4);
-              bookCtx.arcTo(0 + bookWidth, 0 + bookHeight, 0 + bookWidth - 4, 0 + bookHeight, 4);
-              bookCtx.lineTo(0 + 4, 0 + bookHeight);
-              bookCtx.arcTo(0, 0 + bookHeight, 0, 0 + bookHeight - 4, 4);
-              bookCtx.lineTo(0, 0 + 4);
-              bookCtx.arcTo(0, 0, 0 + 4, 0, 4);
-              bookCtx.closePath();
-          }
-          bookCtx.clip();
-          bookCtx.drawImage(bookImg, 0, 0, bookWidth, bookHeight);
-
-          // Add gradient overlay
-          drawBookGradientOverlay(bookCtx, bookWidth, bookHeight);
-          
-          // Reset composite operation
-          bookCtx.globalCompositeOperation = 'source-over';
-
-          // Draw the processed book onto the main canvas
-          cropCtx.save();
-          cropCtx.filter = BOOK_SHADOW;
-          cropCtx.drawImage(bookCanvas, bookX, bookY);
-          cropCtx.restore();
-        });
-      }
+        currentX += bookWidth + BOOK_SPACING;
+      });
     }
     
     // Add overlay for Email size (1080x1080)
@@ -656,142 +560,53 @@ export async function compositeOverlayOnBackground({
   }
 
   // --- Draw books AFTER overlay (on top) ---
-  // Homepage (1200x628) - books overlay with 5-book grid support
+  // Homepage (1200x628) - books overlay with single row layout
   if (size.width === 1200 && size.height === 628 && books.length > 0) {
     const maxBooks = Math.min((books || []).length, 5);
     const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
     
-    // Use grid layout for 5 books, single row for 4 or fewer
-    if (maxBooks <= 4) {
-      // Original single-row layout for 4 or fewer books
-      const BOOK_HEIGHT = 366;
-      const BOOK_SPACING = 30;
-      const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2;
-      const bookWidths = bookImages.map(img => {
-        const aspectRatio = img.width / img.height;
-        return BOOK_HEIGHT * aspectRatio;
-      });
-      const totalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + (BOOK_SPACING * (bookImages.length - 1));
-      let currentX = (size.width - totalWidth) / 2;
-      bookImages.forEach((bookImg, index) => {
-        const bookWidth = bookWidths[index];
-        const offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = bookWidth;
-        offscreenCanvas.height = BOOK_HEIGHT;
-        const offscreenCtx = offscreenCanvas.getContext('2d');
-        offscreenCtx.beginPath();
-        if (offscreenCtx.roundRect) {
-          offscreenCtx.roundRect(0, 0, bookWidth, BOOK_HEIGHT, 4);
-        } else {
-          offscreenCtx.moveTo(0 + 4, 0);
-          offscreenCtx.lineTo(0 + bookWidth - 4, 0);
-          offscreenCtx.arcTo(0 + bookWidth, 0, 0 + bookWidth, 0 + 4, 4);
-          offscreenCtx.lineTo(0 + bookWidth, 0 + BOOK_HEIGHT - 4);
-          offscreenCtx.arcTo(0 + bookWidth, 0 + BOOK_HEIGHT, 0 + bookWidth - 4, 0 + BOOK_HEIGHT, 4);
-          offscreenCtx.lineTo(0 + 4, 0 + BOOK_HEIGHT);
-          offscreenCtx.arcTo(0, 0 + BOOK_HEIGHT, 0, 0 + BOOK_HEIGHT - 4, 4);
-          offscreenCtx.lineTo(0, 0 + 4);
-          offscreenCtx.arcTo(0, 0, 0 + 4, 0, 4);
-          offscreenCtx.closePath();
-        }
-        offscreenCtx.clip();
-        offscreenCtx.drawImage(bookImg, 0, 0, bookWidth, BOOK_HEIGHT);
-        drawBookGradientOverlay(offscreenCtx, bookWidth, BOOK_HEIGHT);
-        offscreenCtx.globalCompositeOperation = 'source-over';
-        cropCtx.save();
-        cropCtx.filter = BOOK_SHADOW;
-        cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
-        cropCtx.restore();
-        currentX += bookWidth + BOOK_SPACING;
-      });
-    } else {
-      // Grid layout for 5 books
-      const gridGap = 20;
-      const margin = 24;
-      const rectX = margin;
-      const rectY = margin;
-      const rectWidth = size.width - margin * 2;
-      const rectHeight = size.height - margin * 2;
-
-      const contentAreaX = rectX + gridGap;
-      const contentAreaY = rectY + gridGap;
-      const contentAreaWidth = rectWidth - (gridGap * 2);
-      const contentAreaHeight = rectHeight - (gridGap * 2);
-
-      // 3x2 grid for 5 books
-      const cols = 3;
-      const rows = 2;
-      const cellWidth = (contentAreaWidth - gridGap * (cols - 1)) / cols;
-      const cellHeight = (contentAreaHeight - gridGap * (rows - 1)) / rows;
-
-      bookImages.forEach((bookImg, index) => {
-        // Calculate grid position for 5 books in 3x2 layout
-        let row, col;
-        if (index < 3) {
-          // First row: books 0, 1, 2
-          row = 0;
-          col = index;
-        } else {
-          // Second row: books 3, 4 (centered)
-          row = 1;
-          col = index - 3;
-          // Center the bottom row by adding offset
-          col += 0.5; // This will center 2 books in a 3-column space
-        }
-
-        let bookWidth, bookHeight;
-        const bookAspectRatio = bookImg.width / bookImg.height;
-        const cellAspectRatio = cellWidth / cellHeight;
-
-        // Determine book dimensions to fit within cell while maintaining aspect ratio
-        if (bookAspectRatio > cellAspectRatio) {
-          bookWidth = cellWidth;
-          bookHeight = bookWidth / bookAspectRatio;
-        } else {
-          bookHeight = cellHeight;
-          bookWidth = bookHeight * bookAspectRatio;
-        }
-        
-        const cellX = contentAreaX + col * (cellWidth + gridGap);
-        const cellY = contentAreaY + row * (cellHeight + gridGap);
-
-        // Center books in their cells
-        const bookX = cellX + (cellWidth - bookWidth) / 2;
-        const bookY = cellY + (cellHeight - bookHeight) / 2;
-
-        // Create offscreen canvas for this book
-        const bookCanvas = document.createElement('canvas');
-        bookCanvas.width = bookWidth;
-        bookCanvas.height = bookHeight;
-        const bookCtx = bookCanvas.getContext('2d');
-
-        // Create a rounded rectangle clipping path
-        bookCtx.beginPath();
-        if (bookCtx.roundRect) {
-            bookCtx.roundRect(0, 0, bookWidth, bookHeight, 4);
-        } else {
-            // Fallback for browsers that don't support roundRect
-            bookCtx.moveTo(0 + 4, 0);
-            bookCtx.lineTo(0 + bookWidth - 4, 0);
-            bookCtx.arcTo(0 + bookWidth, 0, 0 + bookWidth, 0 + 4, 4);
-            bookCtx.lineTo(0 + bookWidth, 0 + bookHeight - 4);
-            bookCtx.arcTo(0 + bookWidth, 0 + bookHeight, 0 + bookWidth - 4, 0 + bookHeight, 4);
-            bookCtx.lineTo(0 + 4, 0 + bookHeight);
-            bookCtx.arcTo(0, 0 + bookHeight, 0, 0 + bookHeight - 4, 4);
-            bookCtx.lineTo(0, 0 + 4);
-            bookCtx.arcTo(0, 0, 0 + 4, 0, 4);
-            bookCtx.closePath();
-        }
-        bookCtx.clip();
-        bookCtx.drawImage(bookImg, 0, 0, bookWidth, bookHeight);
-        drawBookGradientOverlay(bookCtx, bookWidth, bookHeight);
-        bookCtx.globalCompositeOperation = 'source-over';
-        cropCtx.save();
-        cropCtx.filter = BOOK_SHADOW;
-        cropCtx.drawImage(bookCanvas, bookX, bookY);
-        cropCtx.restore();
-      });
-    }
+    // Single-row layout for all book counts (1-5 books)
+    const BOOK_HEIGHT = 366;
+    const BOOK_SPACING = 30;
+    const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2;
+    const bookWidths = bookImages.map(img => {
+      const aspectRatio = img.width / img.height;
+      return BOOK_HEIGHT * aspectRatio;
+    });
+    const totalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + (BOOK_SPACING * (bookImages.length - 1));
+    let currentX = (size.width - totalWidth) / 2;
+    
+    bookImages.forEach((bookImg, index) => {
+      const bookWidth = bookWidths[index];
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = bookWidth;
+      offscreenCanvas.height = BOOK_HEIGHT;
+      const offscreenCtx = offscreenCanvas.getContext('2d');
+      offscreenCtx.beginPath();
+      if (offscreenCtx.roundRect) {
+        offscreenCtx.roundRect(0, 0, bookWidth, BOOK_HEIGHT, 4);
+      } else {
+        offscreenCtx.moveTo(0 + 4, 0);
+        offscreenCtx.lineTo(0 + bookWidth - 4, 0);
+        offscreenCtx.arcTo(0 + bookWidth, 0, 0 + bookWidth, 0 + 4, 4);
+        offscreenCtx.lineTo(0 + bookWidth, 0 + BOOK_HEIGHT - 4);
+        offscreenCtx.arcTo(0 + bookWidth, 0 + BOOK_HEIGHT, 0 + bookWidth - 4, 0 + BOOK_HEIGHT, 4);
+        offscreenCtx.lineTo(0 + 4, 0 + BOOK_HEIGHT);
+        offscreenCtx.arcTo(0, 0 + BOOK_HEIGHT, 0, 0 + BOOK_HEIGHT - 4, 4);
+        offscreenCtx.lineTo(0, 0 + 4);
+        offscreenCtx.arcTo(0, 0, 0 + 4, 0, 4);
+        offscreenCtx.closePath();
+      }
+      offscreenCtx.clip();
+      offscreenCtx.drawImage(bookImg, 0, 0, bookWidth, BOOK_HEIGHT);
+      drawBookGradientOverlay(offscreenCtx, bookWidth, BOOK_HEIGHT);
+      offscreenCtx.globalCompositeOperation = 'source-over';
+      cropCtx.save();
+      cropCtx.filter = BOOK_SHADOW;
+      cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
+      cropCtx.restore();
+      currentX += bookWidth + BOOK_SPACING;
+    });
   }
 
   // --- Email size (1080x1080) overlay handling ---
