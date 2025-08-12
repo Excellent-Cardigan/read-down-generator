@@ -142,19 +142,33 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
       const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
       
       // Single-row layout for all book counts (1-5 books)
-      const BOOK_HEIGHT = 366;
       const BOOK_SPACING = 30;
+      const MARGIN = 50; // Leave margin on sides
+      const availableWidth = size.width - (MARGIN * 2);
+      const totalSpacing = BOOK_SPACING * (bookImages.length - 1);
+      const availableBookWidth = availableWidth - totalSpacing;
+      
+      // Calculate optimal book height that fits all books within available width
+      let BOOK_HEIGHT = 366; // Start with default height
+      
+      // Calculate widths based on aspect ratios
+      const aspectRatios = bookImages.map(img => img.width / img.height);
+      const totalAspectRatio = aspectRatios.reduce((sum, ratio) => sum + ratio, 0);
+      
+      // If total width would exceed available space, scale down the height
+      const estimatedTotalWidth = BOOK_HEIGHT * totalAspectRatio;
+      if (estimatedTotalWidth > availableBookWidth) {
+        BOOK_HEIGHT = availableBookWidth / totalAspectRatio;
+      }
+      
+      // Calculate actual book widths with the adjusted height
+      const bookWidths = aspectRatios.map(ratio => BOOK_HEIGHT * ratio);
+      const actualTotalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + totalSpacing;
+      
       const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2; // Center vertically
       
-      // Calculate total width needed for all books
-      const bookWidths = bookImages.map(img => {
-        const aspectRatio = img.width / img.height;
-        return BOOK_HEIGHT * aspectRatio;
-      });
-      const totalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + (BOOK_SPACING * (bookImages.length - 1));
-      
       // Start X position to center all books horizontally
-      let currentX = (size.width - totalWidth) / 2;
+      let currentX = (size.width - actualTotalWidth) / 2;
       
       // Draw each book in single row
       bookImages.forEach((bookImg, index) => {
@@ -566,15 +580,31 @@ export async function compositeOverlayOnBackground({
     const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
     
     // Single-row layout for all book counts (1-5 books)
-    const BOOK_HEIGHT = 366;
     const BOOK_SPACING = 30;
+    const MARGIN = 50; // Leave margin on sides
+    const availableWidth = size.width - (MARGIN * 2);
+    const totalSpacing = BOOK_SPACING * (bookImages.length - 1);
+    const availableBookWidth = availableWidth - totalSpacing;
+    
+    // Calculate optimal book height that fits all books within available width
+    let BOOK_HEIGHT = 366; // Start with default height
+    
+    // Calculate widths based on aspect ratios
+    const aspectRatios = bookImages.map(img => img.width / img.height);
+    const totalAspectRatio = aspectRatios.reduce((sum, ratio) => sum + ratio, 0);
+    
+    // If total width would exceed available space, scale down the height
+    const estimatedTotalWidth = BOOK_HEIGHT * totalAspectRatio;
+    if (estimatedTotalWidth > availableBookWidth) {
+      BOOK_HEIGHT = availableBookWidth / totalAspectRatio;
+    }
+    
+    // Calculate actual book widths with the adjusted height
+    const bookWidths = aspectRatios.map(ratio => BOOK_HEIGHT * ratio);
+    const actualTotalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + totalSpacing;
+    
     const TOP_MARGIN = (size.height - BOOK_HEIGHT) / 2;
-    const bookWidths = bookImages.map(img => {
-      const aspectRatio = img.width / img.height;
-      return BOOK_HEIGHT * aspectRatio;
-    });
-    const totalWidth = bookWidths.reduce((sum, width) => sum + width, 0) + (BOOK_SPACING * (bookImages.length - 1));
-    let currentX = (size.width - totalWidth) / 2;
+    let currentX = (size.width - actualTotalWidth) / 2;
     
     bookImages.forEach((bookImg, index) => {
       const bookWidth = bookWidths[index];
