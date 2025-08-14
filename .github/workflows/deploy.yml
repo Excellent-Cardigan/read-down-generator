@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main, development, feature/flexible-book-layouts ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -43,6 +43,7 @@ jobs:
           path: './dist'
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
