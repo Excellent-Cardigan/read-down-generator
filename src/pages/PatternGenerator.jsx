@@ -295,20 +295,66 @@ export default function PatternGenerator() {
           const key = `${size.width}x${size.height}`;
           actions.setProgress(70 + (i / targetSizes.length) * 20);
           actions.setProgressMessage(`Compositing ${size.name}...`);
-          newCompositedPatterns[key] = await compositeOverlayOnBackground({
-            backgroundDataUrl: newBackgroundCache[key],
-            size,
-            overlayStyle,
-            objectColors,
-            backgroundColor,
-            books: books || [],
-            emailVariant,
-            fontSize,
-            lineHeight,
-            overlayText,
-            batchOverlayColor: resolvedOverlayColor,
-            overlayAlpha: alphaToUse // pass alpha
-          });
+          
+          // Handle 'both' variant for email size (1080x1080)
+          if (emailVariant === 'both' && size.width === 1080 && size.height === 1080) {
+            console.log('Main thread: Generating both variants for 1080x1080');
+            
+            // Generate text variant
+            const textVariant = await compositeOverlayOnBackground({
+              backgroundDataUrl: newBackgroundCache[key],
+              size,
+              overlayStyle,
+              objectColors,
+              backgroundColor,
+              books: books || [],
+              emailVariant: 'text',
+              fontSize,
+              lineHeight,
+              overlayText,
+              batchOverlayColor: resolvedOverlayColor,
+              overlayAlpha: alphaToUse,
+            });
+            
+            // Generate books variant
+            const booksVariant = await compositeOverlayOnBackground({
+              backgroundDataUrl: newBackgroundCache[key],
+              size,
+              overlayStyle,
+              objectColors,
+              backgroundColor,
+              books: books || [],
+              emailVariant: 'books',
+              fontSize,
+              lineHeight,
+              overlayText,
+              batchOverlayColor: resolvedOverlayColor,
+              overlayAlpha: alphaToUse,
+            });
+            
+            console.log('Main thread: Generated textVariant =', !!textVariant, 'booksVariant =', !!booksVariant);
+            
+            // Store both variants with different keys
+            newCompositedPatterns[`${size.width}x${size.height}-text`] = textVariant;
+            newCompositedPatterns[`${size.width}x${size.height}-books`] = booksVariant;
+            
+            console.log('Main thread: Stored patterns with keys:', `${size.width}x${size.height}-text`, `${size.width}x${size.height}-books`);
+          } else {
+            newCompositedPatterns[key] = await compositeOverlayOnBackground({
+              backgroundDataUrl: newBackgroundCache[key],
+              size,
+              overlayStyle,
+              objectColors,
+              backgroundColor,
+              books: books || [],
+              emailVariant,
+              fontSize,
+              lineHeight,
+              overlayText,
+              batchOverlayColor: resolvedOverlayColor,
+              overlayAlpha: alphaToUse // pass alpha
+            });
+          }
         }
         
         actions.setProgress(95);
@@ -459,6 +505,7 @@ export default function PatternGenerator() {
           selectedSizeKey={selectedSizeKey}
           collections={COLLECTIONS}
           onActiveSizeKeyChange={useCallback((key) => actions.setActiveSizeKey(key), [actions])}
+          emailVariant={emailVariant}
         />
       </CanvasErrorBoundary>
       <ProgressIndicator

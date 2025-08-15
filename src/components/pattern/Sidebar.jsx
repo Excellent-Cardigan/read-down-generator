@@ -310,10 +310,14 @@ function Sidebar({
                       <RadioGroupItem value="books" id="v-books" />
                       <Label htmlFor="v-books">Books</Label>
                   </div>
+                  <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="both" id="v-both" />
+                      <Label htmlFor="v-both">Both</Label>
+                  </div>
               </RadioGroup>
             </div>
 
-            {emailVariant === 'text' && (
+            {(emailVariant === 'text' || emailVariant === 'both') && (
               <div className="space-y-4 pt-2">
                   <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -352,13 +356,21 @@ function Sidebar({
                               className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                           />
                       </div>
+                      
+                      <Button
+                        onClick={() => onRenderWithAlpha(pendingOverlayAlpha)}
+                        className="pc-color-add-btn w-full h-8 px-3 text-xs border border-border bg-background text-foreground hover:bg-[#756f66] hover:text-white"
+                        disabled={isRendering}
+                      >
+                        {isRendering ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Update Text'}
+                      </Button>
                   </div>
               </div>
             )}
           </div>
         )}
 
-        {(isHomepageSize && overlayStyle !== 'none') || (isEmailSize && overlayStyle !== 'none' && emailVariant === 'books') ? (
+        {(isHomepageSize && overlayStyle !== 'none') || (isEmailSize && overlayStyle !== 'none' && (emailVariant === 'books' || emailVariant === 'both')) ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Book className="w-5 h-5 text-muted-foreground" />

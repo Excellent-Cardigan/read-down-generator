@@ -5,12 +5,35 @@ import { Button } from '@/components/ui/button';
 import { ImageIcon, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 
-const PatternPreview = React.memo(function PatternPreview({ patterns, isRendering, selectedSizeKey, collections, onActiveSizeKeyChange }) {
+const PatternPreview = React.memo(function PatternPreview({ patterns, isRendering, selectedSizeKey, collections, onActiveSizeKeyChange, emailVariant }) {
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
 
   const isCollection = !!collections[selectedSizeKey];
   const patternKeys = useMemo(() => isCollection ? (collections[selectedSizeKey]?.sizes || []).map(s => `${s.width}x${s.height}`) : [selectedSizeKey], [isCollection, collections, selectedSizeKey]);
-  const currentPatterns = useMemo(() => (patternKeys || []).map(key => patterns[key]).filter(Boolean), [patternKeys, patterns]);
+  
+  // Handle 'both' variant for email size
+  const currentPatterns = useMemo(() => {
+    console.log('PatternPreview: emailVariant =', emailVariant, 'selectedSizeKey =', selectedSizeKey);
+    console.log('PatternPreview: available patterns =', Object.keys(patterns));
+    console.log('PatternPreview: patternKeys =', patternKeys);
+    
+    // Check if email size (1080x1080) is included in current selection
+    const hasEmailSize = selectedSizeKey === '1080x1080' || patternKeys.includes('1080x1080');
+    
+    if (emailVariant === 'both' && hasEmailSize) {
+      // Look for both text and books variants
+      const textPattern = patterns['1080x1080-text'];
+      const booksPattern = patterns['1080x1080-books'];
+      console.log('PatternPreview: Found email size, textPattern =', !!textPattern, 'booksPattern =', !!booksPattern);
+      
+      if (textPattern && booksPattern) {
+        return { textPattern, booksPattern };
+      }
+    }
+    const regularPatterns = (patternKeys || []).map(key => patterns[key]).filter(Boolean);
+    console.log('PatternPreview: regular patterns count =', regularPatterns.length);
+    return regularPatterns;
+  }, [patternKeys, patterns, emailVariant, selectedSizeKey]);
 
   // NEW: Track the active size key and notify parent
   const activeSizeKey = patternKeys[activePreviewIndex] || patternKeys[0];
@@ -38,6 +61,29 @@ const PatternPreview = React.memo(function PatternPreview({ patterns, isRenderin
                <Loader2 className="h-16 w-16 animate-spin text-primary"/>
                <p className="text-xl font-medium">Generating your masterpiece...</p>
                <p>This may take a moment.</p>
+            </motion.div>
+          ) : (emailVariant === 'both' && currentPatterns.textPattern && currentPatterns.booksPattern) ? (
+            <motion.div key="both-preview" className="w-full h-full flex flex-col items-center justify-center gap-4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
+              <div className="relative w-full flex-grow flex items-center justify-center gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  <img
+                    src={currentPatterns.textPattern}
+                    alt="Text Variant"
+                    className="pc-pattern-carousel-img max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                    style={{ maxHeight: 'calc(100vh - 250px)', maxWidth: '45%'}}
+                  />
+                  <span className="text-sm text-muted-foreground font-medium">Text Variant</span>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <img
+                    src={currentPatterns.booksPattern}
+                    alt="Books Variant"
+                    className="pc-pattern-carousel-img max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                    style={{ maxHeight: 'calc(100vh - 250px)', maxWidth: '45%'}}
+                  />
+                  <span className="text-sm text-muted-foreground font-medium">Books Variant</span>
+                </div>
+              </div>
             </motion.div>
           ) : currentPatterns.length > 0 ? (
             <motion.div key="preview" className="w-full h-full flex flex-col items-center justify-center gap-4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
@@ -86,6 +132,7 @@ PatternPreview.propTypes = {
   selectedSizeKey: PropTypes.string.isRequired,
   collections: PropTypes.object.isRequired,
   onActiveSizeKeyChange: PropTypes.func,
+  emailVariant: PropTypes.string,
 };
 
 export default PatternPreview;

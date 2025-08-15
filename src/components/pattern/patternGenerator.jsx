@@ -286,15 +286,17 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
             bestColor = blackContrast > whiteContrast ? '#000000' : '#FFFFFF';
           }
           cropCtx.fillStyle = bestColor;
+          
           const textCenterX = rectX + rectWidth / 2;
           const textCenterY = rectY + rectHeight / 2;
           const textMaxWidth = rectWidth - 192; // 96px padding on each side
+          
           wrapText(cropCtx, overlayText || '', textCenterX, textCenterY, textMaxWidth, lineHeight || 96, -2);
           cropCtx.restore();
         }
       }
 
-      // Draw books AFTER overlay (on top)
+      // Draw books AFTER overlay (on top) - only for 'books' variant
       if (emailVariant === 'books' && (books || []).length > 0 && overlayStyle !== 'none') {
         // Support up to 5 books with flexible grid layout
         const maxBooks = Math.min((books || []).length, 5);
@@ -321,8 +323,11 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
           rows = 2;
         }
 
-        const cellWidth = (contentAreaWidth - gridGap * (cols - 1)) / cols;
-        const cellHeight = (contentAreaHeight - gridGap * (rows - 1)) / rows;
+        // Calculate equal grid spacing - ensure visual gaps are consistent
+        const totalHorizontalGaps = gridGap * (cols - 1);
+        const totalVerticalGaps = gridGap * (rows - 1);
+        const cellWidth = (contentAreaWidth - totalHorizontalGaps) / cols;
+        const cellHeight = (contentAreaHeight - totalVerticalGaps) / rows;
 
         // offscreenCanvas.width = bookWidth; // This line is now redundant as offscreenCanvas is global
         // offscreenCanvas.height = bookHeight; // This line is now redundant as offscreenCanvas is global
@@ -368,9 +373,32 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
           const cellX = contentAreaX + col * (cellWidth + gridGap);
           const cellY = contentAreaY + row * (cellHeight + gridGap);
 
-          // Center books in their cells (all books same size, no special alignment)
-          const bookX = cellX + (cellWidth - bookWidth) / 2;
-          const bookY = cellY + (cellHeight - bookHeight) / 2;
+          // Align books towards center to reduce visual gaps in 2x2 grid
+          let bookX, bookY;
+          if (maxBooks <= 4) {
+            // 2x2 grid: align books towards each other
+            if (row === 0 && col === 0) {
+              // Top-left book: align to bottom-right of cell
+              bookX = cellX + (cellWidth - bookWidth);
+              bookY = cellY + (cellHeight - bookHeight);
+            } else if (row === 0 && col === 1) {
+              // Top-right book: align to bottom-left of cell
+              bookX = cellX;
+              bookY = cellY + (cellHeight - bookHeight);
+            } else if (row === 1 && col === 0) {
+              // Bottom-left book: align to top-right of cell
+              bookX = cellX + (cellWidth - bookWidth);
+              bookY = cellY;
+            } else {
+              // Bottom-right book: align to top-left of cell
+              bookX = cellX;
+              bookY = cellY;
+            }
+          } else {
+            // 3x2 grid: keep center alignment
+            bookX = cellX + (cellWidth - bookWidth) / 2;
+            bookY = cellY + (cellHeight - bookHeight) / 2;
+          }
 
           // Create a new offscreen canvas for each book
           const offscreenCanvas = document.createElement('canvas');
@@ -435,6 +463,7 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
     const key = `${size.width}x${size.height}`;
     croppedPatterns[key] = cropCanvas.toDataURL('image/png');
   }
+
 
   return croppedPatterns;
 }
@@ -682,15 +711,17 @@ export async function compositeOverlayOnBackground({
         bestColor = blackContrast > whiteContrast ? '#000000' : '#FFFFFF';
       }
       cropCtx.fillStyle = bestColor;
+      
       const textCenterX = rectX + rectWidth / 2;
       const textCenterY = rectY + rectHeight / 2;
       const textMaxWidth = rectWidth - 192; // 96px padding on each side
+      
       wrapText(cropCtx, overlayText || '', textCenterX, textCenterY, textMaxWidth, lineHeight || 96, -2);
       cropCtx.restore();
     }
 
-    // Draw books AFTER overlay (on top) - render books for both 'books' variant AND when books are available
-    if ((emailVariant === 'books' || (books || []).length > 0) && overlayStyle !== 'none') {
+    // Draw books AFTER overlay (on top) - only for 'books' variant
+    if (emailVariant === 'books' && (books || []).length > 0 && overlayStyle !== 'none') {
       // Support up to 5 books with flexible grid layout
       const maxBooks = Math.min((books || []).length, 5);
       const bookImages = await Promise.all((books || []).slice(0, maxBooks).map(book => loadImage(book.source)));
@@ -710,8 +741,11 @@ export async function compositeOverlayOnBackground({
         rows = 2;
       }
 
-      const cellWidth = (contentAreaWidth - gridGap * (cols - 1)) / cols;
-      const cellHeight = (contentAreaHeight - gridGap * (rows - 1)) / rows;
+      // Calculate equal grid spacing - ensure visual gaps are consistent
+      const totalHorizontalGaps = gridGap * (cols - 1);
+      const totalVerticalGaps = gridGap * (rows - 1);
+      const cellWidth = (contentAreaWidth - totalHorizontalGaps) / cols;
+      const cellHeight = (contentAreaHeight - totalVerticalGaps) / rows;
 
       bookImages.forEach((bookImg, index) => {
         if (index >= maxBooks) return; // Only process up to maxBooks
@@ -753,9 +787,32 @@ export async function compositeOverlayOnBackground({
         const cellX = contentAreaX + col * (cellWidth + gridGap);
         const cellY = contentAreaY + row * (cellHeight + gridGap);
 
-        // Center books in their cells (all books same size, no special alignment)
-        const bookX = cellX + (cellWidth - bookWidth) / 2;
-        const bookY = cellY + (cellHeight - bookHeight) / 2;
+        // Align books towards center to reduce visual gaps in 2x2 grid
+        let bookX, bookY;
+        if (maxBooks <= 4) {
+          // 2x2 grid: align books towards each other
+          if (row === 0 && col === 0) {
+            // Top-left book: align to bottom-right of cell
+            bookX = cellX + (cellWidth - bookWidth);
+            bookY = cellY + (cellHeight - bookHeight);
+          } else if (row === 0 && col === 1) {
+            // Top-right book: align to bottom-left of cell
+            bookX = cellX;
+            bookY = cellY + (cellHeight - bookHeight);
+          } else if (row === 1 && col === 0) {
+            // Bottom-left book: align to top-right of cell
+            bookX = cellX + (cellWidth - bookWidth);
+            bookY = cellY;
+          } else {
+            // Bottom-right book: align to top-left of cell
+            bookX = cellX;
+            bookY = cellY;
+          }
+        } else {
+          // 3x2 grid: keep center alignment
+          bookX = cellX + (cellWidth - bookWidth) / 2;
+          bookY = cellY + (cellHeight - bookHeight) / 2;
+        }
 
         // Create a new offscreen canvas for each book
         const bookCanvas = document.createElement('canvas');

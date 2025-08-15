@@ -370,23 +370,68 @@ async function generatePatternBatch(payload) {
         images, objectColors, backgroundColor, size, seed
       );
       
-      // Composite overlay
-      const compositedDataUrl = await compositeOverlayOnBackground({
-        backgroundDataUrl,
-        size,
-        overlayStyle,
-        objectColors,
-        backgroundColor,
-        books,
-        emailVariant,
-        fontSize,
-        lineHeight,
-        overlayText,
-        batchOverlayColor: overlayColor,
-        overlayAlpha,
-      });
-      
-      results[`${size.width}x${size.height}`] = compositedDataUrl;
+      // Handle 'both' variant for email size (1080x1080)
+      if (emailVariant === 'both' && size.width === 1080 && size.height === 1080) {
+        console.log('Worker: Generating both variants for 1080x1080');
+        
+        // Generate text variant
+        const textVariant = await compositeOverlayOnBackground({
+          backgroundDataUrl,
+          size,
+          overlayStyle,
+          objectColors,
+          backgroundColor,
+          books,
+          emailVariant: 'text',
+          fontSize,
+          lineHeight,
+          overlayText,
+          batchOverlayColor: overlayColor,
+          overlayAlpha,
+        });
+        
+        // Generate books variant
+        const booksVariant = await compositeOverlayOnBackground({
+          backgroundDataUrl,
+          size,
+          overlayStyle,
+          objectColors,
+          backgroundColor,
+          books,
+          emailVariant: 'books',
+          fontSize,
+          lineHeight,
+          overlayText,
+          batchOverlayColor: overlayColor,
+          overlayAlpha,
+        });
+        
+        console.log('Worker: Generated textVariant =', !!textVariant, 'booksVariant =', !!booksVariant);
+        
+        // Store both variants with different keys
+        results[`${size.width}x${size.height}-text`] = textVariant;
+        results[`${size.width}x${size.height}-books`] = booksVariant;
+        
+        console.log('Worker: Stored patterns with keys:', `${size.width}x${size.height}-text`, `${size.width}x${size.height}-books`);
+      } else {
+        // Composite overlay normally
+        const compositedDataUrl = await compositeOverlayOnBackground({
+          backgroundDataUrl,
+          size,
+          overlayStyle,
+          objectColors,
+          backgroundColor,
+          books,
+          emailVariant,
+          fontSize,
+          lineHeight,
+          overlayText,
+          batchOverlayColor: overlayColor,
+          overlayAlpha,
+        });
+        
+        results[`${size.width}x${size.height}`] = compositedDataUrl;
+      }
     }
     
     return results;
