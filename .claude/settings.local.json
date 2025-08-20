@@ -14,7 +14,12 @@
       "Bash(git push:*)",
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(xcopy:*)",
+      "Bash(robocopy:*)",
+      "Bash(powershell:*)",
+      "Bash(git init:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }

@@ -48,46 +48,46 @@ const GENRE_COLORS_OBJ = {
   "Biographies & Memoirs": ["#D97E00", "#FFE4BC", "#D5CFC6", "#755F66", "#005D81"]
 };
 
-// Define default images
+// Define default images using local files
 const defaultImages = [
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/1b0376e5d_robert_driscoll_A_hyper-realistic_photo_of_a_stunningly_beaut_49788d84-51b4-4526-ba47-62402b87872f_3.png',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/1b0376e5d_robert_driscoll_A_hyper-realistic_photo_of_a_stunningly_beaut_49788d84-51b4-4526-ba47-62402b87872f_3.png',
+    source: '/images/image-1.png',
+    preview: '/images/image-1.png',
     name: 'image-1.png'
   },
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a468b26b4_robert_driscoll_A_hyper-realistic_photo_of_a_stunningly_beaut_e002c85c-14c1-4470-9870-6c90687add17_3.png',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a468b26b4_robert_driscoll_A_hyper-realistic_photo_of_a_stunningly_beaut_e002c85c-14c1-4470-9870-6c90687add17_3.png',
+    source: '/images/image-2.png',
+    preview: '/images/image-2.png',
     name: 'image-2.png'
   },
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/7003e36ad_robert_driscoll_httpssmjrunDTyP1atkVbg_A_hyper-realistic_ph_02c146c6-b45e-4013-a24b-16f4d33ac6ca_0.png',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/7003e36ad_robert_driscoll_httpssmjrunDTyP1atkVbg_A_hyper-realistic_ph_02c146c6-b45e-4013-a24b-16f4d33ac6ca_0.png',
+    source: '/images/image-3.png',
+    preview: '/images/image-3.png',
     name: 'image-3.png'
   }
 ];
 
-// Define default book covers for testing
+// Define default book covers using local files
 const defaultBooks = [
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/f605c6d05_9780553387629.jpg',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/f605c6d05_9780553387629.jpg',
-    name: 'sonic-life-memoir.jpg'
+    source: '/images/books/9780593548981.jpg',
+    preview: '/images/books/9780593548981.jpg',
+    name: '9780593548981.jpg'
   },
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/5b18d6062_9780593315200.jpg',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/5b18d6062_9780593315200.jpg',
-    name: 'stay-true-memoir.jpg'
+    source: '/images/books/9780593638927.jpg',
+    preview: '/images/books/9780593638927.jpg',
+    name: '9780593638927.jpg'
   },
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/075fa8869_9780593469835.jpg',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/075fa8869_9780593469835.jpg',
-    name: 'wellness-novel.jpg'
+    source: '/images/books/9780593655504.jpg',
+    preview: '/images/books/9780593655504.jpg',
+    name: '9780593655504.jpg'
   },
   { 
-    source: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/b327c5cea_9780593688656.jpg',
-    preview: 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/b327c5cea_9780593688656.jpg',
-    name: 'farewell-to-arms.jpg'
+    source: '/images/books/9780593802724.jpg',
+    preview: '/images/books/9780593802724.jpg',
+    name: '9780593802724.jpg'
   }
 ];
 
@@ -122,11 +122,14 @@ export default function PatternGenerator() {
   
   // Destructure commonly used state values for easier access
   const {
-    selectedSizeKey, colors, selectedGenre, images, books, isRendering, error,
+    selectedSizeKey, colors, selectedGenre, images: stateImages, books, isRendering, error,
     hasAutoRendered, emailVariant, overlayText, overlayStyle, patternSeed,
     fontSize, lineHeight, overlayAlpha, activeSizeKey, backgroundCache,
     compositedPatterns, overlayColor, progress, progressMessage
   } = state;
+  
+  // Ensure stateImages is always an array
+  const safeImages = Array.isArray(stateImages) ? stateImages : [];
   
   const canvasRefs = useRef([]);
   const blobUrls = useRef([]);
@@ -178,7 +181,7 @@ export default function PatternGenerator() {
   // Render/caching logic
   const handleRender = useCallback(async (alphaOverride) => {
     actions.setError(null);
-    if (images.length === 0) {
+    if (safeImages.length === 0) {
       actions.setError('Please upload at least one image.');
       return;
     }
@@ -216,7 +219,7 @@ export default function PatternGenerator() {
         actions.setProgressMessage('Preloading images for worker...');
         
         // Pre-load images for worker (worker can't fetch external URLs)
-        const preloadedImages = await Promise.all((images || []).map(async (img) => {
+        const preloadedImages = await Promise.all((safeImages || []).map(async (img) => {
           try {
             const response = await fetch(img.source);
             const blob = await response.blob();
@@ -281,7 +284,7 @@ export default function PatternGenerator() {
           const key = `${size.width}x${size.height}`;
           actions.setProgress(40 + (i / targetSizes.length) * 30);
           actions.setProgressMessage(`Generating ${size.name} background...`);
-          newBackgroundCache[key] = await generateBackgroundPattern(images, objectColors, backgroundColor, size, patternSeed);
+          newBackgroundCache[key] = await generateBackgroundPattern(safeImages, objectColors, backgroundColor, size, patternSeed);
         }
         actions.setBackgroundCache(newBackgroundCache);
         
@@ -379,11 +382,11 @@ export default function PatternGenerator() {
     } finally {
       actions.setIsRendering(false);
     }
-  }, [images, colors, selectedSizeKey, overlayAlpha, overlayStyle, overlayColor, patternSeed, getBatchOverlayColor, isWorkerAvailable, generatePatternBatch, COLLECTIONS, SIZES, books, emailVariant, fontSize, lineHeight, overlayText, forceMainThread, actions]);
+  }, [safeImages, colors, selectedSizeKey, overlayAlpha, overlayStyle, overlayColor, patternSeed, getBatchOverlayColor, isWorkerAvailable, generatePatternBatch, COLLECTIONS, SIZES, books, emailVariant, fontSize, lineHeight, overlayText, forceMainThread, actions]);
 
   // Initialize overlay color on first load (no auto-render)
   useEffect(() => {
-    if (!hasAutoRendered && images.length > 0 && colors.length > 0) {
+    if (!hasAutoRendered && safeImages.length > 0 && colors.length > 0) {
       actions.setHasAutoRendered(true);
       
       // Initialize overlay color on first load
@@ -395,7 +398,7 @@ export default function PatternGenerator() {
         actions.setOverlayColor(initialOverlayColor);
       }
     }
-  }, [hasAutoRendered, images.length, colors.length, overlayColor, colors, patternSeed, getBatchOverlayColor, actions]);
+  }, [hasAutoRendered, safeImages.length, colors.length, overlayColor, colors, patternSeed, getBatchOverlayColor, actions]);
 
   // Generate new seed and overlay color when images or colors change
   useEffect(() => {
@@ -412,7 +415,7 @@ export default function PatternGenerator() {
         actions.setOverlayColor(newOverlayColor);
       }
     }
-  }, [images, colors, getBatchOverlayColor, actions]); // Remove hasAutoRendered and handleRender from deps
+  }, [safeImages, colors, getBatchOverlayColor, actions]); // Remove hasAutoRendered and handleRender from deps
 
   // Handle output size changes separately to preserve settings (no auto render)
   // User will need to click render button for new sizes
@@ -472,7 +475,7 @@ export default function PatternGenerator() {
         selectedGenre={selectedGenre}
         onGenreChange={handleGenreChange}
         genreColors={GENRE_COLORS}
-        images={images}
+        images={safeImages}
         setImages={actions.setImages}
         books={books}
         setBooks={actions.setBooks}

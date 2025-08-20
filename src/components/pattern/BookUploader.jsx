@@ -26,12 +26,16 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
   }, []);
 
   // Deduplicate by name and size
-  const deduplicate = (newFiles) => {
-    const existing = new Set(Array.isArray(books) ? books.map(book => book.name + '-' + (book.source.size || '')) : []);
+  const deduplicate = useCallback((newFiles) => {
+    const existing = new Set(Array.isArray(books) ? books.map(book => {
+      // Handle both File objects (uploaded) and string URLs (default books)
+      const size = typeof book.source === 'object' ? book.source.size || '' : '';
+      return book.name + '-' + size;
+    }) : []);
     return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
-  };
+  }, [books]);
 
-  const processFiles = (files) => {
+  const processFiles = useCallback((files) => {
     if (!setBooks) return;
     const uniqueFiles = deduplicate(files);
     if (!uniqueFiles || uniqueFiles.length === 0) return;
@@ -75,13 +79,13 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
       };
       reader.readAsDataURL(file);
     });
-  };
+  }, [books, setBooks, addBooks, deduplicate]);
 
   // Debounced file processing
   const debouncedProcessFiles = useCallback((files) => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => processFiles(files), 200);
-  }, []);
+  }, [processFiles]);
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
@@ -174,7 +178,7 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
 
 BookUploader.propTypes = {
   books: PropTypes.arrayOf(PropTypes.shape({
-    source: PropTypes.object,
+    source: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
     preview: PropTypes.string,
     name: PropTypes.string,
   })),

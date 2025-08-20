@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState } from 'react';
 import PropTypes from 'prop-types'; 
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,13 +28,17 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
   }, []);
 
   // Deduplicate by name and size
-  const deduplicate = (newFiles) => {
-    const existing = new Set(Array.isArray(images) ? images.map(img => img.name + '-' + (img.source.size || '')) : []);
+  const deduplicate = useCallback((newFiles) => {
+    const existing = new Set(Array.isArray(images) ? images.map(img => {
+      // Handle both File objects (uploaded) and string URLs (default images)
+      const size = typeof img.source === 'object' ? img.source.size || '' : '';
+      return img.name + '-' + size;
+    }) : []);
     return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
-  };
+  }, [images]);
 
   // Move processFiles above debouncedProcessFiles
-  const processFiles = (files) => {
+  const processFiles = useCallback((files) => {
     const uniqueFiles = deduplicate(files);
     if (uniqueFiles.length === 0) return;
     setIsLoading(true);
@@ -60,10 +64,13 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
       };
       reader.readAsDataURL(file);
     });
-  };
+  }, [deduplicate, setImages]);
 
   // Debounced file processing using shared debounce utility
-  const debouncedProcessFiles = useRef(debounce(processFiles, 200)).current;
+  const debouncedProcessFiles = useCallback((files) => {
+    const debouncedFn = debounce(processFiles, 200);
+    debouncedFn(files);
+  }, [processFiles]);
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
@@ -143,7 +150,7 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
 
 ImageUploader.propTypes = {
   images: PropTypes.arrayOf(PropTypes.shape({
-    source: PropTypes.object,
+    source: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
     preview: PropTypes.string,
     name: PropTypes.string,
   })),
