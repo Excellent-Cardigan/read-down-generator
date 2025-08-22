@@ -51,18 +51,18 @@ const GENRE_COLORS_OBJ = {
 // Define default images using local files
 const defaultImages = [
   { 
-    source: '/images/image-1.png',
-    preview: '/images/image-1.png',
+    source: './images/image-1.png',
+    preview: './images/image-1.png',
     name: 'image-1.png'
   },
   { 
-    source: '/images/image-2.png',
-    preview: '/images/image-2.png',
+    source: './images/image-2.png',
+    preview: './images/image-2.png',
     name: 'image-2.png'
   },
   { 
-    source: '/images/image-3.png',
-    preview: '/images/image-3.png',
+    source: './images/image-3.png',
+    preview: './images/image-3.png',
     name: 'image-3.png'
   }
 ];
@@ -70,23 +70,23 @@ const defaultImages = [
 // Define default book covers using local files
 const defaultBooks = [
   { 
-    source: '/images/books/9780593548981.jpg',
-    preview: '/images/books/9780593548981.jpg',
+    source: './images/books/9780593548981.jpg',
+    preview: './images/books/9780593548981.jpg',
     name: '9780593548981.jpg'
   },
   { 
-    source: '/images/books/9780593638927.jpg',
-    preview: '/images/books/9780593638927.jpg',
+    source: './images/books/9780593638927.jpg',
+    preview: './images/books/9780593638927.jpg',
     name: '9780593638927.jpg'
   },
   { 
-    source: '/images/books/9780593655504.jpg',
-    preview: '/images/books/9780593655504.jpg',
+    source: './images/books/9780593655504.jpg',
+    preview: './images/books/9780593655504.jpg',
     name: '9780593655504.jpg'
   },
   { 
-    source: '/images/books/9780593802724.jpg',
-    preview: '/images/books/9780593802724.jpg',
+    source: './images/books/9780593802724.jpg',
+    preview: './images/books/9780593802724.jpg',
     name: '9780593802724.jpg'
   }
 ];
