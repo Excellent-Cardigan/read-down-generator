@@ -5,7 +5,22 @@ export default function GenreSelector({ selectedGenre, onGenreChange, genreColor
   return (
     <Select value={selectedGenre} onValueChange={onGenreChange}>
       <SelectTrigger className="pc-genre-selector w-full h-12 rounded-xl bg-card border border-border hover:bg-muted/50 focus:ring-2 focus:ring-muted-foreground focus:border-muted-foreground">
-        <SelectValue placeholder="Select a genre" />
+        <SelectValue placeholder="Select a genre">
+          {selectedGenre && (
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                {genreColors[selectedGenre]?.slice(0, 3).map((color, i) => (
+                  <div 
+                    key={i} 
+                    className="w-3 h-3 rounded-full border border-white/20" 
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              <span>{selectedGenre}</span>
+            </div>
+          )}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent className="bg-card rounded-xl border border-border shadow-lg max-h-60">
         {Object.keys(genreColors).map((genre) => (

@@ -184,47 +184,56 @@ function Sidebar({
           />
         </div>
         
-        {/* Palette Tabs + Swatches */}
-        <div className="pc-palette-section space-y-2">
+        {/* Unified Color & Genre Section */}
+        <div className="pc-palette-section space-y-3">
           <div className="pc-palette-headline flex items-center gap-2">
             <Palette className="w-5 h-5 text-muted-foreground" />
             <Label className="text-sm font-medium text-muted-foreground">Color Palette</Label>
           </div>
-          <div className="pc-palette-card bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-1">
-                <Label className="text-sm font-medium">Season:</Label>
-                <Button
-                  onClick={() => setPaletteSeason('Summer')}
-                  className={`pc-color-add-btn h-8 px-3 text-xs border border-border bg-background text-foreground hover:bg-[#756f66] hover:text-white${paletteSeason === 'Summer' ? ' bg-[#473f39e6] text-white border-none' : ''}`}
-                >
-                  Summer
-                </Button>
-                <Button
-                  onClick={() => setPaletteSeason('Fall')}
-                  className={`pc-color-add-btn h-8 px-3 text-xs border border-border bg-background text-foreground hover:bg-[#756f66] hover:text-white${paletteSeason === 'Fall' ? ' bg-[#473f39e6] text-white border-none' : ''}`}
-                >
-                  Fall
-                </Button>
+          
+          <div className="pc-palette-card bg-background rounded-lg border border-border/50 p-4 space-y-4">
+            {/* Season & Genre Selection */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wide">Season & Genre</Label>
+                <div className="flex items-center gap-2 mb-2">
+                  <Button
+                    onClick={() => setPaletteSeason('Summer')}
+                    className={`h-7 px-3 text-xs border border-border bg-background text-foreground hover:bg-[#756f66] hover:text-white transition-all${paletteSeason === 'Summer' ? ' bg-[#473f39e6] text-white border-none shadow-sm' : ''}`}
+                  >
+                    Summer
+                  </Button>
+                  <Button
+                    onClick={() => setPaletteSeason('Fall')}
+                    className={`h-7 px-3 text-xs border border-border bg-background text-foreground hover:bg-[#756f66] hover:text-white transition-all${paletteSeason === 'Fall' ? ' bg-[#473f39e6] text-white border-none shadow-sm' : ''}`}
+                  >
+                    Fall
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 min-h-[48px]">
-                <ColorPalette 
-                  colors={colors}
-                  setColors={setColors}
+              
+              {/* Genre Selection with visual connection */}
+              <div className="space-y-2">
+                <GenreSelector
+                  selectedGenre={selectedGenre}
+                  onGenreChange={onGenreChange}
+                  genreColors={currentPalette}
                 />
               </div>
+            </div>
+            
+            {/* Color Swatches */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wide">Current Colors</Label>
+                <span className="text-xs text-muted-foreground">{colors.length}/8 colors</span>
+              </div>
+              <ColorPalette 
+                colors={colors}
+                setColors={setColors}
+              />
+            </div>
           </div>
-        </div>
-        
-        <div className="pc-genre-section space-y-2">
-          <div className="flex items-center gap-2">
-            <BookMarked className="w-5 h-5 text-muted-foreground" />
-            <Label className="text-sm font-medium text-muted-foreground">Book Genre</Label>
-          </div>
-          <GenreSelector
-            selectedGenre={selectedGenre}
-            onGenreChange={onGenreChange}
-            genreColors={currentPalette}
-          />
         </div>
         
         <div className="pc-upload-section space-y-2">

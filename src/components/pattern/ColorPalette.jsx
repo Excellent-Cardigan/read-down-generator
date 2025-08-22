@@ -37,43 +37,9 @@ const ColorPalette = React.memo(function ColorPalette({ colors, setColors }) {
   }, [colors, debouncedSetColors]);
 
   return (
-    <div className="pc-color-palette space-y-2">
-      {colors.length < 8 && (
-        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-          <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="pc-color-add-btn h-8 px-3 text-xs hover:bg-[#756f66] hover:text-white">
-              <Plus className="w-3 h-3 mr-1" />
-              Add Color
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-4 space-y-3" align="end">
-            <Label className="text-sm font-medium text-gray-700">Add Custom Color</Label>
-            <div className="flex gap-2 items-center">
-              <Input 
-                type="color" 
-                value={newColor}
-                onChange={(e) => {
-                  setNewColor(e.target.value);
-                  // Optionally debounce addColor preview logic here if needed
-                }}
-                className="p-0 h-10 w-10 rounded-md border-0 cursor-pointer"
-              />
-              <Input 
-                type="text" 
-                value={newColor}
-                onChange={(e) => setNewColor(e.target.value)}
-                className="flex-grow h-10 rounded-md border border-gray-200 w-28"
-                placeholder="#RRGGBB"
-              />
-            </div>
-            <Button onClick={addColor} size="sm" className="w-full hover:bg-[#756f66] hover:text-white">
-              <Plus className="h-4 w-4 mr-1" /> Add Color
-            </Button>
-          </PopoverContent>
-        </Popover>
-      )}
-      
-      <div className="flex flex-wrap items-center gap-2 p-2 bg-card rounded-xl border border-border min-h-[56px]">
+    <div className="pc-color-palette space-y-3">
+      {/* Color Swatches */}
+      <div className="flex flex-wrap items-center gap-2 p-3 bg-card rounded-xl border border-border min-h-[60px]">
         <AnimatePresence>
           {colors.map((color, idx) => (
             <motion.div
@@ -129,6 +95,41 @@ const ColorPalette = React.memo(function ColorPalette({ colors, setColors }) {
           ))}
         </AnimatePresence>
       </div>
+      
+      {/* Add Color Button - Moved to bottom */}
+      {colors.length < 8 && (
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="pc-color-add-btn w-full h-8 text-xs hover:bg-[#756f66] hover:text-white border-dashed">
+              <Plus className="w-3 h-3 mr-1" />
+              Add Custom Color
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-4 space-y-3" align="center">
+            <Label className="text-sm font-medium text-gray-700">Add Custom Color</Label>
+            <div className="flex gap-2 items-center">
+              <Input 
+                type="color" 
+                value={newColor}
+                onChange={(e) => {
+                  setNewColor(e.target.value);
+                }}
+                className="p-0 h-10 w-10 rounded-md border-0 cursor-pointer"
+              />
+              <Input 
+                type="text" 
+                value={newColor}
+                onChange={(e) => setNewColor(e.target.value)}
+                className="flex-grow h-10 rounded-md border border-gray-200 w-28"
+                placeholder="#RRGGBB"
+              />
+            </div>
+            <Button onClick={addColor} size="sm" className="w-full hover:bg-[#756f66] hover:text-white">
+              <Plus className="h-4 w-4 mr-1" /> Add Color
+            </Button>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 });
