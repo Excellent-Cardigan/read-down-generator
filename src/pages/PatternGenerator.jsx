@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { usePatternState } from '../hooks/usePatternState';
 import Sidebar from '../components/pattern/Sidebar';
 import PatternPreview from '../components/pattern/PatternPreview';
@@ -130,6 +130,7 @@ export default function PatternGenerator() {
   
   // Ensure stateImages is always an array
   const safeImages = Array.isArray(stateImages) ? stateImages : [];
+  
   
   const canvasRefs = useRef([]);
   const blobUrls = useRef([]);
@@ -384,7 +385,7 @@ export default function PatternGenerator() {
     }
   }, [safeImages, colors, selectedSizeKey, overlayAlpha, overlayStyle, overlayColor, patternSeed, getBatchOverlayColor, isWorkerAvailable, generatePatternBatch, COLLECTIONS, SIZES, books, emailVariant, fontSize, lineHeight, overlayText, forceMainThread, actions]);
 
-  // Initialize overlay color on first load (no auto-render)
+  // Auto-render on first load
   useEffect(() => {
     if (!hasAutoRendered && safeImages.length > 0 && colors.length > 0) {
       actions.setHasAutoRendered(true);
@@ -397,8 +398,13 @@ export default function PatternGenerator() {
         const initialOverlayColor = getBatchOverlayColor(availableColors, backgroundColor, patternSeed);
         actions.setOverlayColor(initialOverlayColor);
       }
+      
+      // Auto-render the first pattern
+      setTimeout(() => {
+        handleRender();
+      }, 100); // Small delay to ensure all initialization is complete
     }
-  }, [hasAutoRendered, safeImages.length, colors.length, overlayColor, colors, patternSeed, getBatchOverlayColor, actions]);
+  }, [hasAutoRendered, safeImages.length, colors.length, overlayColor, colors, patternSeed, getBatchOverlayColor, actions, handleRender]);
 
   // Generate new seed and overlay color when images or colors change
   useEffect(() => {

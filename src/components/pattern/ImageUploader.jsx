@@ -45,18 +45,35 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
     let processed = 0;
     (uniqueFiles || []).forEach(file => {
       const reader = new FileReader();
+      reader.onerror = (error) => {
+        console.error(`Failed to read file ${file.name}:`, error);
+        alert(`Failed to read file ${file.name}. Please try again.`);
+        processed++;
+        if (processed === uniqueFiles.length) setIsLoading(false);
+      };
       reader.onload = (e) => {
         const img = new window.Image();
         img.onload = () => {
-          if (img.width <= 2000 && img.height <= 2000) {
-            setImages(prev => [...prev, { source: file, preview: e.target.result, name: file.name }]);
-          } else {
-            alert(`Image ${file.name} is too large (${img.width}x${img.height}). Maximum is 2000x2000px.`);
+          try {
+            if (img.width <= 2000 && img.height <= 2000) {
+              // Get current images and add the new one
+              const newImage = { source: file, preview: e.target.result, name: file.name };
+              const currentImages = Array.isArray(images) ? images : [];
+              const newArray = [...currentImages, newImage];
+              setImages(newArray);
+            } else {
+              alert(`Image ${file.name} is too large (${img.width}x${img.height}). Maximum is 2000x2000px.`);
+            }
+          } catch (error) {
+            console.error(`Error processing image ${file.name}:`, error);
+            alert(`Error processing image ${file.name}. Please try again.`);
           }
           processed++;
           if (processed === uniqueFiles.length) setIsLoading(false);
         };
-        img.onerror = () => {
+        img.onerror = (error) => {
+          console.error(`Failed to load image ${file.name}:`, error);
+          alert(`Failed to load image ${file.name}. Please check the file format and try again.`);
           processed++;
           if (processed === uniqueFiles.length) setIsLoading(false);
         };

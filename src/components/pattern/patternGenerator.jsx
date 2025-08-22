@@ -10,6 +10,33 @@ import {
   hexToRgb
 } from '../../utils/patternUtils';
 
+// Check if fonts are loaded, with fallback
+function ensureFontsLoaded() {
+  return new Promise((resolve) => {
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        // Check if Shift font is specifically loaded
+        const testDiv = document.createElement('div');
+        testDiv.style.fontFamily = 'Shift, serif';
+        testDiv.style.fontSize = '16px';
+        testDiv.style.visibility = 'hidden';
+        testDiv.textContent = 'Test';
+        document.body.appendChild(testDiv);
+        
+        // Clean up test element
+        setTimeout(() => {
+          document.body.removeChild(testDiv);
+        }, 10);
+        
+        resolve();
+      });
+    } else {
+      // Fallback for browsers without Font Loading API
+      setTimeout(resolve, 100);
+    }
+  });
+}
+
 /**
  * Generates a master pattern and crops it to specified dimensions.
  * For Homepage size (1200x628), also overlays book covers.
@@ -254,7 +281,7 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
         // Draw overlay text for emailVariant === 'text'
         if (emailVariant === 'text') {
           cropCtx.save();
-          cropCtx.font = `${fontSize || 80}px 'Shift', Georgia, serif`;
+          cropCtx.font = `500 ${fontSize || 80}px 'Shift', Georgia, serif`;
           // Determine overlay background color
           let overlayBg;
           if (overlayStyle === 'solid') {
@@ -556,6 +583,9 @@ export async function compositeOverlayOnBackground({
   batchOverlayColor = null,
   overlayAlpha = 1,
 }) {
+  // Ensure fonts are loaded before rendering text
+  await ensureFontsLoaded();
+  
   const BOOK_SHADOW = 'drop-shadow(-8px 12px 16px rgba(10, 10, 10, 0.36))';
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = size.width;
@@ -679,7 +709,7 @@ export async function compositeOverlayOnBackground({
     // Draw overlay text for emailVariant === 'text'
     if (emailVariant === 'text') {
       cropCtx.save();
-      cropCtx.font = `${fontSize || 80}px 'Shift', Georgia, serif`;
+      cropCtx.font = `500 ${fontSize || 80}px 'Shift', Georgia, serif`;
       // Determine overlay background color
       let overlayBg;
       if (overlayStyle === 'solid') {

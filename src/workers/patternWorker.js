@@ -1,6 +1,28 @@
 // Pattern Generation Web Worker
 // This worker handles CPU-intensive pattern generation tasks
 
+// Load fonts for the worker context
+let fontsLoaded = false;
+async function loadFonts() {
+  if (fontsLoaded) return;
+  
+  try {
+    // Load the Shift font in the worker context
+    const shiftFont = new FontFace('Shift', 'url(/fonts/Shift-Medium.otf)', {
+      style: 'normal',
+      weight: '500'
+    });
+    
+    await shiftFont.load();
+    self.fonts.add(shiftFont);
+    fontsLoaded = true;
+    console.log('Worker: Shift font loaded successfully');
+  } catch (error) {
+    console.warn('Worker: Failed to load Shift font:', error);
+    // Font loading failed, will fall back to serif
+  }
+}
+
 // Import pattern generation utilities
 import {
   loadImage,
@@ -157,6 +179,9 @@ async function compositeOverlayOnBackground({
   batchOverlayColor = null,
   overlayAlpha = 1,
 }) {
+  // Ensure fonts are loaded before rendering text
+  await loadFonts();
+  
   // Load background image
   const backgroundImg = await loadImage(backgroundDataUrl);
   
@@ -301,7 +326,7 @@ async function compositeOverlayOnBackground({
       // Add text overlay
       if (emailVariant === 'text' && overlayText) {
         ctx.save();
-        ctx.font = `${fontSize}px "Shift Medium", serif`;
+        ctx.font = `500 ${fontSize}px "Shift", serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
