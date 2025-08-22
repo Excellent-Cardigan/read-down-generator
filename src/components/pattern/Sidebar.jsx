@@ -157,15 +157,15 @@ function Sidebar({
   // Note: Overlay alpha is now updated manually via the "Update Opacity" button
 
   return (
-    <div className="pc-sidebar w-full md:w-1/3 lg:w-1/4 bg-muted border-r border-border h-screen overflow-y-auto p-4 flex flex-col gap-5 min-h-full"
+    <div className="pc-sidebar w-full md:w-1/3 lg:w-1/4 bg-muted border-r border-border h-screen overflow-y-auto flex flex-col gap-5 min-h-full"
       style={{ contain: 'layout paint' }}
     >
-      <header className="pc-sidebar-header px-1">
+      <header className="pc-sidebar-header px-5 pt-4">
         <h1 className="text-2xl font-bold text-foreground/90 tracking-tight">Pattern Craft</h1>
         <p className="text-sm text-muted-foreground">Create unique patterns from your assets.</p>
       </header>
       {/* Pattern Generation Settings - These trigger full re-renders */}
-      <div className="pc-pattern-generation bg-card rounded-xl border border-border p-4 space-y-4">
+      <div className="pc-pattern-generation bg-card rounded-xl border border-border p-4 space-y-4 mx-4">
         <div className="flex items-center gap-2 mb-2">
           <Wand2 className="w-5 h-5 text-muted-foreground" />
           <Label className="text-sm font-medium text-muted-foreground">Pattern Generation</Label>
@@ -185,7 +185,7 @@ function Sidebar({
         </div>
         
         {/* Unified Color & Genre Section */}
-        <div className="pc-palette-section space-y-3">
+        <div className="pc-palette-section space-y-3 mx-4">
           <div className="pc-palette-headline flex items-center gap-2">
             <Palette className="w-5 h-5 text-muted-foreground" />
             <Label className="text-sm font-medium text-muted-foreground">Color Palette</Label>
@@ -246,7 +246,7 @@ function Sidebar({
       </div>
 
       {/* Overlay Settings - These only affect overlays, not the background pattern */}
-      <div className="pc-overlay-settings bg-card rounded-xl border border-border p-4 space-y-4">
+      <div className="pc-overlay-settings bg-card rounded-xl border border-border p-4 space-y-4 mx-4">
         <div className="flex items-center gap-2 mb-2">
           <LayoutTemplate className="w-5 h-5 text-muted-foreground" />
           <Label className="text-sm font-medium text-muted-foreground">Overlay Settings</Label>
@@ -390,11 +390,11 @@ function Sidebar({
         ) : null}
       </div>
       
-      <div className="flex-grow flex flex-col gap-5">
+      <div className="flex-grow flex flex-col gap-5 mx-4">
 
       </div>
 
-      <div className="pc-sidebar-footer pt-4 space-y-3 sticky bottom-0 bg-muted/90 backdrop-blur-sm pb-4">
+      <div className="pc-sidebar-footer pt-4 space-y-3 sticky bottom-0 bg-muted px-4 pb-0">
         {error && (
           <Alert variant="destructive" className="mb-4">
             <Terminal className="h-4 w-4" />
@@ -434,14 +434,16 @@ function Sidebar({
             </>
           )}
         </Button>
-        <DownloadButtons
-          currentPatterns={currentPatterns}
-          patternKeys={patternKeys}
-          isCollection={isCollection}
-          isRendering={isRendering}
-          images={images}
-          onRender={onRender}
-        />
+        <div className="pb-4">
+          <DownloadButtons
+            currentPatterns={currentPatterns}
+            patternKeys={patternKeys}
+            isCollection={isCollection}
+            isRendering={isRendering}
+            images={images}
+            onRender={onRender}
+          />
+        </div>
       </div>
     </div>
   );
