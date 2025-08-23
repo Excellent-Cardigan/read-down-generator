@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Wand2, Loader2, Terminal, Scaling, BookMarked, Images, Download, Book, LayoutTemplate, Type, EyeOff, Square, CheckSquare, Palette } from 'lucide-react';
+import { Wand2, Loader2, Terminal, Scaling, Images, Download, Book, LayoutTemplate, Type, EyeOff, Square, CheckSquare, Palette } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -158,7 +158,10 @@ function Sidebar({
 
   return (
     <div className="pc-sidebar w-full md:w-1/3 lg:w-1/4 bg-muted border-r border-border h-screen overflow-y-auto flex flex-col gap-5 min-h-full"
-      style={{ contain: 'layout paint' }}
+      style={{ 
+        contain: 'layout paint',
+        scrollbarGutter: 'stable'
+      }}
     >
       <header className="pc-sidebar-header px-5 pt-4">
         <h1 className="text-2xl font-bold text-foreground/90 tracking-tight">Pattern Craft</h1>
@@ -480,6 +483,8 @@ Sidebar.propTypes = {
   setLineHeight: PropTypes.func.isRequired,
   overlayAlpha: PropTypes.number.isRequired,
   onRenderWithAlpha: PropTypes.func.isRequired,
+  addBooks: PropTypes.func.isRequired,
+  setOverlayAlpha: PropTypes.func.isRequired,
 };
 
 export default React.memo(Sidebar);

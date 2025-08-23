@@ -81,7 +81,7 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
       };
       reader.readAsDataURL(file);
     });
-  }, [deduplicate, setImages]);
+  }, [deduplicate, setImages, images]);
 
   // Debounced file processing using shared debounce utility
   const debouncedProcessFiles = useCallback((files) => {

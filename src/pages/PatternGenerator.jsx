@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { usePatternState } from '../hooks/usePatternState';
 import Sidebar from '../components/pattern/Sidebar';
 import PatternPreview from '../components/pattern/PatternPreview';
@@ -118,13 +118,13 @@ export default function PatternGenerator() {
   const forceMainThread = true;
   
   // Use consolidated state management
-  const { state, actions, selectors } = usePatternState(GENRE_COLORS_OBJ, defaultImages, defaultBooks);
+  const { state, actions } = usePatternState(GENRE_COLORS_OBJ, defaultImages, defaultBooks);
   
   // Destructure commonly used state values for easier access
   const {
     selectedSizeKey, colors, selectedGenre, images: stateImages, books, isRendering, error,
     hasAutoRendered, emailVariant, overlayText, overlayStyle, patternSeed,
-    fontSize, lineHeight, overlayAlpha, activeSizeKey, backgroundCache,
+    fontSize, lineHeight, overlayAlpha, activeSizeKey,
     compositedPatterns, overlayColor, progress, progressMessage
   } = state;
   
@@ -439,7 +439,6 @@ export default function PatternGenerator() {
     // This useEffect is no longer needed as handleRender handles rendering directly
     // and the slider value is passed as an argument.
     // Keeping it for now in case it's used elsewhere or for future changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [overlayAlpha]);
 
   const handleSidebarRender = useCallback(() => {

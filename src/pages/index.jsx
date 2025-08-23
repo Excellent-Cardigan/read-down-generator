@@ -43,6 +43,7 @@ function PagesContent() {
 }
 
 export default function Pages() {
+    // eslint-disable-next-line no-undef
     const basename = process.env.NODE_ENV === 'production' ? '/read-down-generator' : '';
     
     return (

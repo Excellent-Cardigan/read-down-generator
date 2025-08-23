@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // eslint-disable-next-line no-undef
   base: process.env.NODE_ENV === 'production' ? '/read-down-generator/' : '/',
   plugins: [react()],
   server: {
