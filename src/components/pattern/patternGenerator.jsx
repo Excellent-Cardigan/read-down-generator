@@ -10,7 +10,17 @@ import {
   hexToRgb
 } from '../../utils/patternUtils';
 
-// Check if fonts are loaded, with fallback
+/**
+ * @typedef {{source: File | string, preview: string, name: string}} ImageObject
+ * @typedef {{source: File | string, preview: string, name: string}} BookObject
+ * @typedef {{width: number, height: number}} SizeInfo
+ * @typedef {'text' | 'book'} EmailVariant
+ * @typedef {'transparent' | 'solid'} OverlayStyle
+ */
+
+/**
+ * @returns {Promise<void>}
+ */
 function ensureFontsLoaded() {
   return new Promise((resolve) => {
     if (document.fonts && document.fonts.ready) {
@@ -38,8 +48,21 @@ function ensureFontsLoaded() {
 }
 
 /**
- * Generates a master pattern and crops it to specified dimensions.
- * For Homepage size (1200x628), also overlays book covers.
+ * @param {ImageObject[]} uploadedImages
+ * @param {string[]} objectColors
+ * @param {string} backgroundColor
+ * @param {Object<string, SizeInfo>} targetSizes
+ * @param {BookObject[]} [books=[]]
+ * @param {EmailVariant} [emailVariant='text']
+ * @param {OverlayStyle} [overlayStyle='transparent']
+ * @param {number} [seed=Math.random()]
+ * @param {number} [fontSize=80]
+ * @param {number} [lineHeight=96]
+ * @param {string} [overlayText='']
+ * @param {number} [blurAmount=0]
+ * @param {number} [ditherAmount=0]
+ * @param {number} [overlayAlpha=0.8]
+ * @returns {Promise<Object<string, string>>}
  */
 export async function generatePatternFromSettings(uploadedImages, objectColors, backgroundColor, targetSizes, books = [], emailVariant = 'text', overlayStyle = 'transparent', seed = Math.random(), fontSize = 80, lineHeight = 96, overlayText = '', blurAmount = 0, ditherAmount = 0, overlayAlpha = 0.8) {
   const MASTER_SIZE = 2400;
@@ -568,7 +591,21 @@ export async function generateBackgroundPattern(uploadedImages, objectColors, ba
   return cropCanvas.toDataURL('image/png');
 }
 
-// 2. Composite overlay (text/books) on a given background image/canvas
+/**
+ * @param {object} params
+ * @param {string} params.backgroundDataUrl
+ * @param {SizeInfo} params.size
+ * @param {OverlayStyle | 'none'} params.overlayStyle
+ * @param {string[]} [params.objectColors=[]]
+ * @param {BookObject[]} [params.books=[]]
+ * @param {EmailVariant} [params.emailVariant='text']
+ * @param {number} [params.fontSize=80]
+ * @param {number} [params.lineHeight=96]
+ * @param {string} [params.overlayText='']
+ * @param {string | null} [params.batchOverlayColor=null]
+ * @param {number} [params.overlayAlpha=1]
+ * @returns {Promise<string>}
+ */
 export async function compositeOverlayOnBackground({
   backgroundDataUrl,
   size,
@@ -888,8 +925,12 @@ export async function compositeOverlayOnBackground({
   return cropCanvas.toDataURL('image/png');
 }
 
+/**
+ * @param {ImageData} imageData
+ * @param {number} amount
+ * @returns {void}
+ */
 function applyDither(imageData, amount) {
-  // Simple random threshold dithering
   const data = imageData.data;
   for (let i = 0; i < data.length; i += 4) {
     for (let c = 0; c < 3; c++) {
@@ -901,7 +942,11 @@ function applyDither(imageData, amount) {
   }
 }
 
-// Bulletproof withAlpha helper for all color formats
+/**
+ * @param {string} color
+ * @param {number} alpha
+ * @returns {string}
+ */
 function withAlpha(color, alpha) {
   if (!color) return color;
   if (color.startsWith('rgba')) {

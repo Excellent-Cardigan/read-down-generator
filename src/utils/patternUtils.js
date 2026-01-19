@@ -1,8 +1,17 @@
-// Utility to asynchronously load a File object or URL into an Image element, with caching
+/**
+ * @typedef {HTMLCanvasElement | OffscreenCanvas} Canvas
+ * @typedef {HTMLImageElement | ImageBitmap} ImageSource
+ */
+
 const MAX_CACHE_SIZE = 50;
+/** @type {Map<string | File, HTMLImageElement>} */
 const imageCache = new Map();
 
-// Helper: create a canvas (OffscreenCanvas in worker, HTMLCanvasElement in main thread)
+/**
+ * @param {number} width
+ * @param {number} height
+ * @returns {Canvas}
+ */
 export function createCanvas(width, height) {
   if (typeof OffscreenCanvas !== 'undefined') {
     return new OffscreenCanvas(width, height);
@@ -13,7 +22,10 @@ export function createCanvas(width, height) {
   return canvas;
 }
 
-// Helper: load image (ImageBitmap in worker, HTMLImageElement in main thread)
+/**
+ * @param {File | Blob | string} source
+ * @returns {Promise<ImageSource>}
+ */
 export async function loadImage(source) {
   if (typeof createImageBitmap !== 'undefined') {
     // Worker context
@@ -55,7 +67,11 @@ export async function loadImage(source) {
   }
 }
 
-// Creates a tinted version of an image on a canvas (worker and main thread compatible)
+/**
+ * @param {ImageSource} originalImage
+ * @param {string} color
+ * @returns {Canvas}
+ */
 export function tintImage(originalImage, color) {
   const canvas = createCanvas(originalImage.width, originalImage.height);
   const ctx = canvas.getContext('2d');
@@ -68,7 +84,16 @@ export function tintImage(originalImage, color) {
   return canvas;
 }
 
-// Wraps and centers text within a specified bounding box on a canvas
+/**
+ * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} maxWidth
+ * @param {number} lineHeight
+ * @param {number} [letterSpacing=0]
+ * @returns {void}
+ */
 export function wrapText(context, text, x, y, maxWidth, lineHeight, letterSpacing = 0) {
   const words = text.split(' ');
   let line = '';
@@ -96,6 +121,14 @@ export function wrapText(context, text, x, y, maxWidth, lineHeight, letterSpacin
   }
 }
 
+/**
+ * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} context
+ * @param {string} text
+ * @param {number} x
+ * @param {number} y
+ * @param {number} letterSpacing
+ * @returns {void}
+ */
 function drawTextWithLetterSpacing(context, text, x, y, letterSpacing) {
   if (!text || typeof text !== 'string' || text.length === 0) return;
   // Calculate total width for centering
@@ -112,13 +145,23 @@ function drawTextWithLetterSpacing(context, text, x, y, letterSpacing) {
   }
 }
 
-// Seeded random number generator
+/**
+ * @param {number} seed
+ * @returns {number}
+ */
 export function seededRandom(seed) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
 
-// Color and contrast utility functions
+/**
+ * @typedef {{r: number, g: number, b: number}} RGB
+ */
+
+/**
+ * @param {string} hex
+ * @returns {RGB | null}
+ */
 export function hexToRgb(hex) {
   if (!hex || hex.length < 4) return null;
   let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -129,6 +172,10 @@ export function hexToRgb(hex) {
   } : null;
 }
 
+/**
+ * @param {RGB} rgb
+ * @returns {number}
+ */
 export function getLuminance(rgb) {
   if (!rgb) return 0;
   const a = [rgb.r, rgb.g, rgb.b].map(function (v) {
@@ -138,12 +185,22 @@ export function getLuminance(rgb) {
   return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
 }
 
+/**
+ * @param {number} lum1
+ * @param {number} lum2
+ * @returns {number}
+ */
 export function getContrastRatio(lum1, lum2) {
   const lighter = Math.max(lum1, lum2);
   const darker = Math.min(lum1, lum2);
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+/**
+ * @param {string[]} palette
+ * @param {string} backgroundHex
+ * @returns {{overlay: string, text: string}}
+ */
 export function findBestColorCombo(palette, backgroundHex) {
   const bgRgb = hexToRgb(backgroundHex);
   if (!bgRgb) return { overlay: '#ffffff', text: '#000000' };
@@ -184,7 +241,20 @@ export function findBestColorCombo(palette, backgroundHex) {
   return { overlay: overlayColor, text: bestText.color };
 }
 
-// Draws a rounded rectangle overlay (solid or transparent) on a canvas context
+/**
+ * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} ctx
+ * @param {object} options
+ * @param {number} options.x
+ * @param {number} options.y
+ * @param {number} options.width
+ * @param {number} options.height
+ * @param {number} options.radius
+ * @param {'solid' | 'transparent'} options.style
+ * @param {string} options.fillColor
+ * @param {string} [options.strokeColor]
+ * @param {number} [options.lineWidth]
+ * @returns {void}
+ */
 export function drawOverlayRect(ctx, { x, y, width, height, radius, style, fillColor, strokeColor, lineWidth }) {
   ctx.save();
   ctx.beginPath();
@@ -221,7 +291,12 @@ export function drawOverlayRect(ctx, { x, y, width, height, radius, style, fillC
   ctx.restore();
 }
 
-// Draws a book gradient overlay on a given context and rect
+/**
+ * @param {CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D} ctx
+ * @param {number} width
+ * @param {number} height
+ * @returns {void}
+ */
 export function drawBookGradientOverlay(ctx, width, height) {
   const gradient = ctx.createLinearGradient(0, 0, width, 0);
   gradient.addColorStop(0.01, 'rgba(110, 110, 110, 0.40)');

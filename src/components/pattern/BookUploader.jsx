@@ -3,29 +3,57 @@ import PropTypes from 'prop-types';
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * @typedef {{source: File | string, preview: string, name: string}} BookObject
+ */
+
+/**
+ * @param {object} props
+ * @param {BookObject[]} [props.books=[]]
+ * @param {function(BookObject[]): void} props.setBooks
+ * @param {function(BookObject[]): void} props.addBooks
+ */
 const BookUploader = React.memo(function BookUploader({ books = [], setBooks, addBooks }) {
+  /** @type {[boolean, function(boolean): void]} */
   const [isDragActive, setIsDragActive] = useState(false);
+  /** @type {[boolean, function(boolean): void]} */
   const [isLoading, setIsLoading] = useState(false);
+  /** @type {React.MutableRefObject<NodeJS.Timeout | null>} */
   const debounceTimeout = useRef(null);
 
+  /**
+   * @param {React.DragEvent} e
+   * @returns {void}
+   */
   const handleDragEnter = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(true);
   }, []);
 
+  /**
+   * @param {React.DragEvent} e
+   * @returns {void}
+   */
   const handleDragLeave = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
   }, []);
 
+  /**
+   * @param {React.DragEvent} e
+   * @returns {void}
+   */
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
 
-  // Deduplicate by name and size
+  /**
+   * @param {File[]} newFiles
+   * @returns {File[]}
+   */
   const deduplicate = useCallback((newFiles) => {
     const existing = new Set(Array.isArray(books) ? books.map(book => {
       // Handle both File objects (uploaded) and string URLs (default books)
@@ -35,6 +63,10 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
     return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
   }, [books]);
 
+  /**
+   * @param {File[]} files
+   * @returns {void}
+   */
   const processFiles = useCallback((files) => {
     if (!setBooks) return;
     const uniqueFiles = deduplicate(files);
@@ -101,11 +133,13 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
     e.target.value = '';
   }, [debouncedProcessFiles]);
 
+  /**
+   * @param {number} indexToRemove
+   * @returns {void}
+   */
   const removeBook = (indexToRemove) => {
     if (!setBooks || !Array.isArray(books)) return;
-    // Create new array without the removed book
     const newBooks = books.filter((_, index) => index !== indexToRemove);
-    // Pass the new array directly (not a function) to the reducer
     setBooks(newBooks);
   };
 

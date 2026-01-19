@@ -91,7 +91,10 @@ const defaultBooks = [
   }
 ];
 
-// Helper to resolve a CSS variable color (e.g. hsl(var(--primary))) to an rgb string
+/**
+ * @param {string} color
+ * @returns {string}
+ */
 function resolveCssColor(color) {
   if (typeof window === 'undefined') return color;
   // If it's a CSS variable, resolve it

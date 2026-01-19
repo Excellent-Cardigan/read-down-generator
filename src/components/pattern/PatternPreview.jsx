@@ -5,6 +5,22 @@ import { Button } from '@/components/ui/button';
 import { ImageIcon, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import PropTypes from 'prop-types';
 
+/**
+ * @typedef {Object<string, string>} PatternCache
+ * @typedef {{width: number, height: number}} SizeInfo
+ * @typedef {Object<string, {name: string, sizes: SizeInfo[]}>} Collections
+ * @typedef {'text' | 'book' | 'both'} EmailVariant
+ */
+
+/**
+ * @param {object} props
+ * @param {PatternCache} props.patterns
+ * @param {boolean} props.isRendering
+ * @param {string} props.selectedSizeKey
+ * @param {Collections} props.collections
+ * @param {function(string): void} props.onActiveSizeKeyChange
+ * @param {EmailVariant} props.emailVariant
+ */
 const PatternPreview = React.memo(function PatternPreview({ patterns, isRendering, selectedSizeKey, collections, onActiveSizeKeyChange, emailVariant }) {
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
 

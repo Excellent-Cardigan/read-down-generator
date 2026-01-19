@@ -9,12 +9,24 @@ import { Plus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Label } from '@/components/ui/label';
 
+/**
+ * @param {object} props
+ * @param {string[]} props.colors
+ * @param {function(string[]): void} props.setColors
+ */
 const ColorPalette = React.memo(function ColorPalette({ colors, setColors }) {
+  /** @type {[string, function(string): void]} */
   const [newColor, setNewColor] = useState('#aabbcc');
+  /** @type {[boolean, function(boolean): void]} */
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [openSwatchIndex, setOpenSwatchIndex] = useState(null); // Track which swatch popover is open
-  const [editingColor, setEditingColor] = useState(''); // For editing swatch color
+  /** @type {[number | null, function(number | null): void]} */
+  const [openSwatchIndex, setOpenSwatchIndex] = useState(null);
+  /** @type {[string, function(string): void]} */
+  const [editingColor, setEditingColor] = useState('');
 
+  /**
+   * @returns {void}
+   */
   const addColor = () => {
     if (colors.length < 8 && newColor && !colors.includes(newColor)) {
       setColors([...colors, newColor]);
@@ -22,13 +34,21 @@ const ColorPalette = React.memo(function ColorPalette({ colors, setColors }) {
     }
   };
 
+  /**
+   * @param {string} colorToRemove
+   * @returns {void}
+   */
   const removeColor = (colorToRemove) => {
     setColors(colors.filter(color => color !== colorToRemove));
   };
 
-  // Debounced color update
   const debouncedSetColors = useRef(debounce(setColors, 200)).current;
 
+  /**
+   * @param {number} index
+   * @param {string} value
+   * @returns {void}
+   */
   const handleSwatchColorChange = useCallback((index, value) => {
     const updatedColors = [...colors];
     updatedColors[index] = value;

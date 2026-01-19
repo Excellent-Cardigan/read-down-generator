@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
 
+/**
+ * @template T
+ * @param {T} value
+ * @param {number} [delay=300]
+ * @returns {T}
+ */
 export function useDebounce(value, delay = 300) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -15,8 +21,14 @@ export function useDebounce(value, delay = 300) {
   return debouncedValue;
 }
 
+/**
+ * @param {function(...*): void} callback
+ * @param {number} [delay=300]
+ * @param {React.DependencyList} [deps=[]]
+ * @returns {function(...*): void}
+ */
 export function useDebouncedCallback(callback, delay = 300, deps = []) {
-  // Returns a debounced version of a callback
+  /** @type {[* | undefined, function(* | undefined): void]} */
   const [args, setArgs] = useState();
   useEffect(() => {
     if (args === undefined) return;

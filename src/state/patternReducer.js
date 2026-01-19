@@ -1,5 +1,37 @@
-// Pattern Generator State Reducer
-// Consolidates all pattern-related state into a single, predictable reducer
+/**
+ * @typedef {{source: File | string, preview: string, name: string}} ImageObject
+ * @typedef {{source: File | string, preview: string, name: string}} BookObject
+ * @typedef {Object<string, string>} PatternCache
+ * @typedef {'text' | 'book'} EmailVariant
+ * @typedef {'transparent' | 'solid'} OverlayStyle
+ *
+ * @typedef {object} PatternState
+ * @property {string} selectedSizeKey
+ * @property {string} activeSizeKey
+ * @property {boolean} isRendering
+ * @property {string | null} error
+ * @property {boolean} hasAutoRendered
+ * @property {number} progress
+ * @property {string} progressMessage
+ * @property {string[]} colors
+ * @property {string} selectedGenre
+ * @property {ImageObject[]} images
+ * @property {BookObject[]} books
+ * @property {number} patternSeed
+ * @property {EmailVariant} emailVariant
+ * @property {string} overlayText
+ * @property {OverlayStyle} overlayStyle
+ * @property {string | null} overlayColor
+ * @property {number} overlayAlpha
+ * @property {number} fontSize
+ * @property {number} lineHeight
+ * @property {PatternCache} backgroundCache
+ * @property {PatternCache} compositedPatterns
+ *
+ * @typedef {object} PatternAction
+ * @property {string} type
+ * @property {*} [payload]
+ */
 
 // Action Types
 export const PATTERN_ACTIONS = {
@@ -41,7 +73,12 @@ export const PATTERN_ACTIONS = {
   INITIALIZE_STATE: 'INITIALIZE_STATE',
 };
 
-// Initial State
+/**
+ * @param {Object<string, string[]>} GENRE_COLORS_OBJ
+ * @param {ImageObject[]} defaultImages
+ * @param {BookObject[]} defaultBooks
+ * @returns {PatternState}
+ */
 export const createInitialState = (GENRE_COLORS_OBJ, defaultImages, defaultBooks) => ({
   // UI State
   selectedSizeKey: 'all-sizes',
@@ -73,7 +110,11 @@ export const createInitialState = (GENRE_COLORS_OBJ, defaultImages, defaultBooks
   compositedPatterns: {},
 });
 
-// Reducer Function
+/**
+ * @param {PatternState} state
+ * @param {PatternAction} action
+ * @returns {PatternState}
+ */
 export function patternReducer(state, action) {
   switch (action.type) {
     // UI State Actions
@@ -189,7 +230,42 @@ export function patternReducer(state, action) {
   }
 }
 
-// Action Creators for convenience
+/**
+ * @typedef {function(PatternAction): void} Dispatch
+ * @typedef {object} PatternActions
+ * @property {function(string): void} setSelectedSizeKey
+ * @property {function(string): void} setActiveSizeKey
+ * @property {function(boolean): void} setIsRendering
+ * @property {function(string | null): void} setError
+ * @property {function(boolean): void} setHasAutoRendered
+ * @property {function(number): void} setProgress
+ * @property {function(string): void} setProgressMessage
+ * @property {function(string[]): void} setColors
+ * @property {function(string): void} setSelectedGenre
+ * @property {function(ImageObject[]): void} setImages
+ * @property {function(BookObject[]): void} setBooks
+ * @property {function(BookObject[]): void} addBooks
+ * @property {function(number): void} setPatternSeed
+ * @property {function(EmailVariant): void} setEmailVariant
+ * @property {function(string): void} setOverlayText
+ * @property {function(OverlayStyle): void} setOverlayStyle
+ * @property {function(string | null): void} setOverlayColor
+ * @property {function(number): void} setOverlayAlpha
+ * @property {function(number): void} setFontSize
+ * @property {function(number): void} setLineHeight
+ * @property {function(PatternCache): void} setBackgroundCache
+ * @property {function(PatternCache): void} setCompositedPatterns
+ * @property {function(PatternCache): void} updateBackgroundCache
+ * @property {function(PatternCache): void} updateCompositedPatterns
+ * @property {function(): void} clearCache
+ * @property {function(): void} resetForNewRender
+ * @property {function(Partial<PatternState>): void} initializeState
+ */
+
+/**
+ * @param {Dispatch} dispatch
+ * @returns {PatternActions}
+ */
 export const createActions = (dispatch) => ({
   // UI Actions
   setSelectedSizeKey: (key) => dispatch({ type: PATTERN_ACTIONS.SET_SELECTED_SIZE_KEY, payload: key }),
@@ -229,7 +305,28 @@ export const createActions = (dispatch) => ({
   initializeState: (state) => dispatch({ type: PATTERN_ACTIONS.INITIALIZE_STATE, payload: state }),
 });
 
-// Selectors for computed values
+/**
+ * @typedef {object} PatternSelectors
+ * @property {function(): string[]} getColors
+ * @property {function(): ImageObject[]} getImages
+ * @property {function(): BookObject[]} getBooks
+ * @property {function(): string | null} getError
+ * @property {function(): boolean} getIsRendering
+ * @property {function(): string} getBackgroundColor
+ * @property {function(): string[]} getObjectColors
+ * @property {function(): boolean} getHasValidImages
+ * @property {function(): boolean} getHasValidColors
+ * @property {function(): boolean} getCanRender
+ * @property {function(): boolean} getHasPatterns
+ * @property {function(string): string | undefined} getPatternForSize
+ * @property {function(string): string | undefined} getBackgroundForSize
+ * @property {function(): string[]} getCacheKeys
+ */
+
+/**
+ * @param {PatternState} state
+ * @returns {PatternSelectors}
+ */
 export const createSelectors = (state) => ({
   // Basic selectors
   getColors: () => state.colors,

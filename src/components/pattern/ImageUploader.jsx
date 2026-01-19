@@ -1,33 +1,57 @@
 import React, { useCallback, useState } from 'react';
-import PropTypes from 'prop-types'; 
+import PropTypes from 'prop-types';
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { debounce } from '@/lib/utils';
 
-const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
-  const [isDragActive, setIsDragActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  // Debounce timeout is managed by the debounce utility
-  // const debounceTimeout = useRef(null);
+/**
+ * @typedef {{source: File | string, preview: string, name: string}} ImageObject
+ */
 
+/**
+ * @param {object} props
+ * @param {ImageObject[]} props.images
+ * @param {function(ImageObject[]): void} props.setImages
+ */
+const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
+  /** @type {[boolean, function(boolean): void]} */
+  const [isDragActive, setIsDragActive] = useState(false);
+  /** @type {[boolean, function(boolean): void]} */
+  const [isLoading, setIsLoading] = useState(false);
+
+  /**
+   * @param {React.DragEvent} e
+   * @returns {void}
+   */
   const handleDragEnter = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(true);
   }, []);
 
+  /**
+   * @param {React.DragEvent} e
+   * @returns {void}
+   */
   const handleDragLeave = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragActive(false);
   }, []);
 
+  /**
+   * @param {React.DragEvent} e
+   * @returns {void}
+   */
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
 
-  // Deduplicate by name and size
+  /**
+   * @param {File[]} newFiles
+   * @returns {File[]}
+   */
   const deduplicate = useCallback((newFiles) => {
     const existing = new Set(Array.isArray(images) ? images.map(img => {
       // Handle both File objects (uploaded) and string URLs (default images)
@@ -37,7 +61,10 @@ const ImageUploader = React.memo(function ImageUploader({ images, setImages }) {
     return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
   }, [images]);
 
-  // Move processFiles above debouncedProcessFiles
+  /**
+   * @param {File[]} files
+   * @returns {void}
+   */
   const processFiles = useCallback((files) => {
     const uniqueFiles = deduplicate(files);
     if (uniqueFiles.length === 0) return;
