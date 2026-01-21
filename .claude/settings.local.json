@@ -21,7 +21,11 @@
       "Bash(git init:*)",
       "Bash(cp:*)",
       "Bash(npm run deploy:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(sort:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

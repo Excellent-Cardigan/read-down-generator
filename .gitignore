@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 
 .env
+
+# Large files and temporary artifacts
+*.psd
+*.tmp
+*.cache
+.turbo
+coverage/
