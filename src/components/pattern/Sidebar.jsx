@@ -178,28 +178,21 @@ function Sidebar({
   const isEmailSize = activeSizeKey === '1080x1080';
   const isOverlayApplicable = isHomepageSize || isEmailSize;
 
-  // Debounced overlay text, font size, and line height
+  // Local state for text editing (no auto-sync, only updates on button click)
   const [localOverlayText, setLocalOverlayText] = React.useState(overlayText);
   const [localFontSize, setLocalFontSize] = React.useState(fontSize);
   const [localLineHeight, setLocalLineHeight] = React.useState(lineHeight);
 
-  const debouncedOverlayText = useDebounce(localOverlayText, 400);
-  const debouncedFontSize = useDebounce(localFontSize, 200);
-  const debouncedLineHeight = useDebounce(localLineHeight, 200);
-
-  // Sync debounced values to parent state
+  // Sync parent changes to local state
   React.useEffect(() => {
-    if (debouncedOverlayText !== overlayText) setOverlayText(debouncedOverlayText);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedOverlayText]);
+    setLocalOverlayText(overlayText);
+  }, [overlayText]);
   React.useEffect(() => {
-    if (debouncedFontSize !== fontSize) setFontSize(debouncedFontSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedFontSize]);
+    setLocalFontSize(fontSize);
+  }, [fontSize]);
   React.useEffect(() => {
-    if (debouncedLineHeight !== lineHeight) setLineHeight(debouncedLineHeight);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedLineHeight]);
+    setLocalLineHeight(lineHeight);
+  }, [lineHeight]);
 
   // Local state for pending overlay alpha
   const [pendingOverlayAlpha, setPendingOverlayAlpha] = React.useState(overlayAlpha);
@@ -480,7 +473,13 @@ function Sidebar({
                       </div>
                       
                       <Button
-                        onClick={() => onRenderWithAlpha(pendingOverlayAlpha)}
+                        onClick={() => {
+                          // Sync local values to parent state before rendering
+                          setOverlayText(localOverlayText);
+                          setFontSize(localFontSize);
+                          setLineHeight(localLineHeight);
+                          onRenderWithAlpha(pendingOverlayAlpha);
+                        }}
                         className="pc-color-add-btn w-full h-8 px-3 text-xs border border-border bg-background text-foreground hover:bg-[#756f66] hover:text-white"
                         disabled={isRendering}
                       >
