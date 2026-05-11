@@ -24,7 +24,7 @@ const prompts = [
     "name": "Blurred Atmospheric Mist",
     "description": "Dissolving effect, maximum softness",
     "preview": "/images/ai-previews/blurred-mist.jpg",
-    "text": "blurred areas of ${color1} dissolving into soft atmospheric mist with all edges completely softened and blended into a smooth dreamy haze",
+    "text": "heavily blurred areas of ${color1} dissolving into soft blurry atmospheric mist with all edges completely softened and blended into a smooth dreamy haze",
     "styleStrength": 20,
     "visualIntensity": 2
   },
