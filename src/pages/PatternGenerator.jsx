@@ -318,46 +318,19 @@ export default function PatternGenerator() {
           const gradResults = await generateGradientBackground(colors, targetSizes, Math.random());
           Object.assign(newBackgroundCache, gradResults);
         } else if (backgroundStyle === 'ai') {
-          // Generate NEW AI background each render
+          // Use existing AI background from state (generated via modal)
           actions.setProgress(45);
-          actions.setProgressMessage('Generating AI background...');
+          actions.setProgressMessage('Using AI background...');
 
-          try {
-            isGeneratingDuringRender.current = true; // Prevent auto-render loop
-
-            // Fetch available prompts and pick a random one
-            const promptsData = await fetchAIPrompts();
-            const prompts = promptsData.prompts || [];
-            if (prompts.length === 0) {
-              throw new Error('No AI prompts available');
-            }
-            const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-            console.log('🎲 Picked random prompt:', randomPrompt.name);
-
-            // Generate with current colors (server will pick random color from palette)
-            const result = await generateAIBackground(randomPrompt.id, colors, 'firefly');
-            const newAIBackground = result.imageDataUrl;
-            console.log('✅ Generated new AI background, length:', newAIBackground.length);
-            console.log('📝 First 100 chars:', newAIBackground.substring(0, 100));
-
-            // Update state so future renders can access it
-            actions.setAIBackground(newAIBackground);
-
-            // Use the new background for all sizes
-            for (const size of targetSizes) {
-              const key = `${size.width}x${size.height}`;
-              newBackgroundCache[key] = newAIBackground;
-            }
-
-            // Reset flag after a delay to allow future modal generations to auto-render
-            setTimeout(() => {
-              isGeneratingDuringRender.current = false;
-            }, 500);
-          } catch (error) {
-            console.error('AI generation failed:', error);
-            actions.setError(`AI generation failed: ${error.message}`);
-            isGeneratingDuringRender.current = false;
+          if (!state.aiBackgroundDataUrl) {
+            actions.setError('No AI background available. Please generate one first.');
             return;
+          }
+
+          // Use the existing AI background for all sizes
+          for (const size of targetSizes) {
+            const key = `${size.width}x${size.height}`;
+            newBackgroundCache[key] = state.aiBackgroundDataUrl;
           }
         } else {
           for (let i = 0; i < targetSizes.length; i++) {
