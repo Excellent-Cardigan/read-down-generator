@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import prompts from './config/aiPrompts.json';
 
 interface FireflyStyleOptions {
   stylePreset?: string;
@@ -9,6 +8,44 @@ interface FireflyStyleOptions {
 }
 
 const FIREFLY_BASE_URL = "https://firefly.api.bertelsmann.de/firefly";
+
+const PROMPTS_CONFIG = [
+  {
+    "id": "monotone-smooth",
+    "name": "Monotone Smooth Transition",
+    "text": "monotone single color smooth transition, faded single color wash background using only ${color1}, soft gradients between light and dark values of the same hue, subtle painted texture, no other colors, no objects, no details, colors extend to all edges",
+    "styleStrength": 20,
+    "visualIntensity": 2
+  },
+  {
+    "id": "diagonal-gradient",
+    "name": "Diagonal Gradient",
+    "text": "diagonal gradient from light ${color1} in top-left corner fading to darker ${color1} in bottom-right corner, smooth seamless transition, no texture, no patterns, colors extend to all edges",
+    "styleStrength": 20,
+    "visualIntensity": 2
+  },
+  {
+    "id": "blurred-mist",
+    "name": "Blurred Atmospheric Mist",
+    "text": "blurred areas of ${color1} dissolving into soft atmospheric mist with all edges completely softened and blended into a smooth dreamy haze",
+    "styleStrength": 20,
+    "visualIntensity": 2
+  },
+  {
+    "id": "atmospheric-haze",
+    "name": "Atmospheric Single-Color Haze",
+    "text": "atmospheric single-color haze in ${color1}, like looking through tinted fog, subtle value shifts, no forms, no texture, pure color field, colors extend to all edges",
+    "styleStrength": 20,
+    "visualIntensity": 2
+  },
+  {
+    "id": "extreme-blur",
+    "name": "Extremely Blurred Haze",
+    "text": "Create an extremely blurred and hazy background where soft textures completely melt away into pure atmospheric fog, with heavily diffused gradients of light ${color1} and dark ${color1} that dissolve into each other with maximum blur and dreamy softness.",
+    "styleStrength": 20,
+    "visualIntensity": 2
+  }
+];
 
 const colorNameCache = new Map<string, string>();
 
@@ -241,7 +278,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: "Missing required fields: promptId, colors" });
     }
 
-    const promptConfig = prompts.prompts.find((p: any) => p.id === promptId);
+    const promptConfig = PROMPTS_CONFIG.find((p: any) => p.id === promptId);
     if (!promptConfig) {
       return res.status(404).json({ message: "Prompt not found" });
     }
