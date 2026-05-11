@@ -5,6 +5,8 @@ import {
   seededRandom,
   drawOverlayRect,
   drawBookGradientOverlay,
+  applyBookShadow,
+  clearBookShadow,
   wrapText,
   getContrastRatio,
   hexToRgb
@@ -43,7 +45,6 @@ function ensureFontsLoaded() {
  */
 export async function generatePatternFromSettings(uploadedImages, objectColors, backgroundColor, targetSizes, books = [], emailVariant = 'text', overlayStyle = 'transparent', seed = Math.random(), fontSize = 80, lineHeight = 96, overlayText = '', blurAmount = 0, ditherAmount = 0, overlayAlpha = 0.8) {
   const MASTER_SIZE = 2400;
-  const BOOK_SHADOW = 'drop-shadow(0px 8px 40px rgba(0, 0, 0, 0.45))';
   
   // Use seeded random for consistent patterns
   let currentSeed = seed;
@@ -235,7 +236,7 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
         // Draw the processed book from offscreen canvas onto the main canvas
         // with the specified shadow effect
         cropCtx.save();
-        cropCtx.filter = BOOK_SHADOW;
+        
         cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
         cropCtx.restore();
 
@@ -461,7 +462,7 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
 
           // Draw the processed book from offscreen canvas onto the main canvas
           cropCtx.save();
-          cropCtx.filter = BOOK_SHADOW; // Updated shadow for consistency
+           // Updated shadow for consistency
           cropCtx.drawImage(offscreenCanvas, bookX, bookY);
           cropCtx.restore();
         });
@@ -675,7 +676,6 @@ export async function compositeOverlayOnBackground({
   // Ensure fonts are loaded before rendering text
   await ensureFontsLoaded();
   
-  const BOOK_SHADOW = 'drop-shadow(0px 8px 40px rgba(0, 0, 0, 0.45))';
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = size.width;
   cropCanvas.height = size.height;
@@ -780,7 +780,7 @@ export async function compositeOverlayOnBackground({
       drawBookGradientOverlay(offscreenCtx, bookWidth, BOOK_HEIGHT);
       offscreenCtx.globalCompositeOperation = 'source-over';
       cropCtx.save();
-      cropCtx.filter = BOOK_SHADOW;
+      
       cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
       cropCtx.restore();
       currentX += bookWidth + BOOK_SPACING;
@@ -967,7 +967,7 @@ export async function compositeOverlayOnBackground({
 
         // Draw the processed book from offscreen canvas onto the main canvas
         cropCtx.save();
-        cropCtx.filter = BOOK_SHADOW;
+        
         cropCtx.drawImage(bookCanvas, bookX, bookY);
         cropCtx.restore();
       });

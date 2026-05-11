@@ -246,4 +246,20 @@ export function drawBookGradientOverlay(ctx, width, height) {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
   ctx.globalCompositeOperation = 'source-over';
+}
+
+// Apply professional drop shadow to canvas context (from Prompt-Performance-Monitor)
+export function applyBookShadow(ctx) {
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 8;
+}
+
+// Clear shadow from canvas context
+export function clearBookShadow(ctx) {
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
 } 
