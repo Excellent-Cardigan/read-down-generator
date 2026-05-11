@@ -43,7 +43,7 @@ function ensureFontsLoaded() {
  */
 export async function generatePatternFromSettings(uploadedImages, objectColors, backgroundColor, targetSizes, books = [], emailVariant = 'text', overlayStyle = 'transparent', seed = Math.random(), fontSize = 80, lineHeight = 96, overlayText = '', blurAmount = 0, ditherAmount = 0, overlayAlpha = 0.8) {
   const MASTER_SIZE = 2400;
-  const BOOK_SHADOW = 'drop-shadow(-8px 12px 16px rgba(10, 10, 10, 0.36))';
+  const BOOK_SHADOW = 'drop-shadow(0px 8px 40px rgba(0, 0, 0, 0.45))';
   
   // Use seeded random for consistent patterns
   let currentSeed = seed;
@@ -675,7 +675,7 @@ export async function compositeOverlayOnBackground({
   // Ensure fonts are loaded before rendering text
   await ensureFontsLoaded();
   
-  const BOOK_SHADOW = 'drop-shadow(-8px 12px 16px rgba(10, 10, 10, 0.36))';
+  const BOOK_SHADOW = 'drop-shadow(0px 8px 40px rgba(0, 0, 0, 0.45))';
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = size.width;
   cropCanvas.height = size.height;

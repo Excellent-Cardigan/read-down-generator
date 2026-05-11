@@ -48,3 +48,20 @@ export async function generateAIBackground(promptId, colors, engine = 'firefly')
 
   return res.json();
 }
+
+export async function fetchBookByIsbn(isbn) {
+  const res = await fetch('/api/fetch-book-cover', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ isbn })
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || 'Failed to fetch book cover');
+  }
+
+  return res.json();
+}

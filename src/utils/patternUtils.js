@@ -223,13 +223,16 @@ export function drawOverlayRect(ctx, { x, y, width, height, radius, style, fillC
 
 // Draws a book gradient overlay on a given context and rect
 export function drawBookGradientOverlay(ctx, width, height) {
+  // Enhanced gradient with spine effect (from Prompt-Performance-Monitor BookCover.tsx)
   const gradient = ctx.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0.01, 'rgba(110, 110, 110, 0.40)');
-  gradient.addColorStop(0.02, 'rgba(255, 255, 255, 0.40)');
-  gradient.addColorStop(0.99, 'rgba(255, 255, 255, 0.40)');
-  gradient.addColorStop(1.0, 'rgba(162, 162, 162, 0.40)');
-  ctx.globalCompositeOperation = 'multiply';
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
+  gradient.addColorStop(0.008, 'rgba(0, 0, 0, 0.04)');
+  gradient.addColorStop(0.015, 'rgba(255, 255, 255, 0.08)');
+  gradient.addColorStop(0.03, 'rgba(255, 255, 255, 0.02)');
+  gradient.addColorStop(0.05, 'transparent');
+  gradient.addColorStop(0.95, 'transparent');
+  gradient.addColorStop(0.98, 'rgba(0, 0, 0, 0.03)');
+  gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0.08)');
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
-  ctx.globalCompositeOperation = 'source-over';
 } 

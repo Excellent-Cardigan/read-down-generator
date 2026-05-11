@@ -1,13 +1,17 @@
 import React, { useCallback, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { UploadCloud, X, Loader2 } from 'lucide-react';
+import { UploadCloud, X, Loader2, Book } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { extractColorsFromImage } from '@/services/api';
+import { extractColorsFromImage, fetchBookByIsbn } from '@/services/api';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 const BookUploader = React.memo(function BookUploader({ books = [], setBooks, addBooks, onColorsExtracted }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isExtractingColors, setIsExtractingColors] = useState(false);
+  const [isbnInput, setIsbnInput] = useState('');
+  const [isFetchingIsbn, setIsFetchingIsbn] = useState(false);
   const debounceTimeout = useRef(null);
 
   const handleDragEnter = useCallback((e) => {
@@ -105,6 +109,36 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
     debounceTimeout.current = setTimeout(() => processFiles(files), 200);
   }, [processFiles]);
 
+  const handleFetchIsbn = useCallback(async () => {
+    if (!isbnInput.trim()) return;
+
+    setIsFetchingIsbn(true);
+    try {
+      const result = await fetchBookByIsbn(isbnInput);
+
+      const newBook = {
+        source: result.coverUrl,
+        preview: result.coverUrl,
+        name: result.title || `ISBN ${result.isbn}`,
+        isbn: result.isbn
+      };
+
+      if (addBooks) {
+        addBooks([newBook]);
+      } else if (setBooks) {
+        const currentBooks = Array.isArray(books) ? books : [];
+        setBooks([...currentBooks, newBook]);
+      }
+
+      setIsbnInput('');
+    } catch (error) {
+      console.error('Failed to fetch book cover:', error);
+      alert(error.message || 'Failed to fetch book cover. Please try a different ISBN.');
+    } finally {
+      setIsFetchingIsbn(false);
+    }
+  }, [isbnInput, books, setBooks, addBooks]);
+
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -136,6 +170,33 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
 
   return (
     <div className="pc-book-uploader space-y-3">
+      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="relative flex-1">
+          <Book className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Enter ISBN"
+            value={isbnInput}
+            onChange={(e) => setIsbnInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleFetchIsbn()}
+            disabled={isFetchingIsbn}
+            className="pl-9 h-9 text-sm"
+          />
+        </div>
+        <Button
+          onClick={handleFetchIsbn}
+          disabled={!isbnInput.trim() || isFetchingIsbn}
+          size="sm"
+          className="h-9 px-4"
+        >
+          {isFetchingIsbn ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            'Fetch'
+          )}
+        </Button>
+      </div>
+
       <div
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
