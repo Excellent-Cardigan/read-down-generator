@@ -4,9 +4,9 @@ const prompts = [
   {
     "id": "monotone-smooth",
     "name": "Monotone Smooth Transition",
-    "description": "Painted texture variation, single color faded wash",
+    "description": "Single color faded wash",
     "preview": "/images/ai-previews/monotone-smooth.jpg",
-    "text": "monotone single color smooth transition, faded single color wash background using only ${color1}, soft gradients between light and dark values of the same hue, subtle painted texture, no other colors, no objects, no details, colors extend to all edges",
+    "text": "monotone single color smooth transition, faded single color wash background using only ${color1}, soft gradients between light and dark values of the same hue, subtle texture, no other colors, no objects, no details, colors extend to all edges",
     "styleStrength": 20,
     "visualIntensity": 2
   },
