@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import prompts from '../server/config/aiPrompts.json';
+import prompts from './config/aiPrompts.json';
 
 interface FireflyStyleOptions {
   stylePreset?: string;
