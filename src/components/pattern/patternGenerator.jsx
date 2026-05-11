@@ -236,8 +236,9 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
         // Draw the processed book from offscreen canvas onto the main canvas
         // with the specified shadow effect
         cropCtx.save();
-        
+        applyBookShadow(cropCtx);
         cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
+        clearBookShadow(cropCtx);
         cropCtx.restore();
 
         currentX += bookWidth + BOOK_SPACING;
@@ -462,8 +463,9 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
 
           // Draw the processed book from offscreen canvas onto the main canvas
           cropCtx.save();
-           // Updated shadow for consistency
+          applyBookShadow(cropCtx);
           cropCtx.drawImage(offscreenCanvas, bookX, bookY);
+          clearBookShadow(cropCtx);
           cropCtx.restore();
         });
       }
@@ -780,8 +782,9 @@ export async function compositeOverlayOnBackground({
       drawBookGradientOverlay(offscreenCtx, bookWidth, BOOK_HEIGHT);
       offscreenCtx.globalCompositeOperation = 'source-over';
       cropCtx.save();
-      
+      applyBookShadow(cropCtx);
       cropCtx.drawImage(offscreenCanvas, currentX, TOP_MARGIN);
+      clearBookShadow(cropCtx);
       cropCtx.restore();
       currentX += bookWidth + BOOK_SPACING;
     });
@@ -967,8 +970,9 @@ export async function compositeOverlayOnBackground({
 
         // Draw the processed book from offscreen canvas onto the main canvas
         cropCtx.save();
-        
+        applyBookShadow(cropCtx);
         cropCtx.drawImage(bookCanvas, bookX, bookY);
+        clearBookShadow(cropCtx);
         cropCtx.restore();
       });
     }
