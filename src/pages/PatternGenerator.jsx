@@ -330,6 +330,9 @@ export default function PatternGenerator() {
           }
 
           try {
+            // Set flag to prevent auto-render loop
+            isGeneratingDuringRender.current = true;
+
             console.log('🔄 Regenerating AI background with prompt:', state.lastAIPromptId);
             const result = await generateAIBackground(state.lastAIPromptId, colors, 'firefly');
             const newAIBackground = result.imageDataUrl;
@@ -342,9 +345,15 @@ export default function PatternGenerator() {
               const key = `${size.width}x${size.height}`;
               newBackgroundCache[key] = newAIBackground;
             }
+
+            // Reset flag after a delay to allow future modal generations to auto-render
+            setTimeout(() => {
+              isGeneratingDuringRender.current = false;
+            }, 500);
           } catch (error) {
             console.error('AI regeneration failed:', error);
             actions.setError(`AI generation failed: ${error.message}`);
+            isGeneratingDuringRender.current = false;
             return;
           }
         } else {
