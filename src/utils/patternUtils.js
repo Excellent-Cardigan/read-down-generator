@@ -223,16 +223,27 @@ export function drawOverlayRect(ctx, { x, y, width, height, radius, style, fillC
 
 // Draws a book gradient overlay on a given context and rect
 export function drawBookGradientOverlay(ctx, width, height) {
-  // Enhanced gradient with spine effect (from Prompt-Performance-Monitor BookCover.tsx)
+  // Enhanced gradient with spine effect (adapted from Prompt-Performance-Monitor)
+  // Increased opacity for better visibility on canvas
   const gradient = ctx.createLinearGradient(0, 0, width, 0);
-  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.12)');
-  gradient.addColorStop(0.008, 'rgba(0, 0, 0, 0.04)');
-  gradient.addColorStop(0.015, 'rgba(255, 255, 255, 0.08)');
-  gradient.addColorStop(0.03, 'rgba(255, 255, 255, 0.02)');
+
+  // Left spine highlight (more pronounced)
+  gradient.addColorStop(0, 'rgba(0, 0, 0, 0.25)');
+  gradient.addColorStop(0.008, 'rgba(0, 0, 0, 0.08)');
+  gradient.addColorStop(0.015, 'rgba(255, 255, 255, 0.20)');
+  gradient.addColorStop(0.03, 'rgba(255, 255, 255, 0.05)');
   gradient.addColorStop(0.05, 'transparent');
+
+  // Center stays transparent to show cover art
   gradient.addColorStop(0.95, 'transparent');
-  gradient.addColorStop(0.98, 'rgba(0, 0, 0, 0.03)');
-  gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0.08)');
+
+  // Right edge darkening (more pronounced)
+  gradient.addColorStop(0.98, 'rgba(0, 0, 0, 0.08)');
+  gradient.addColorStop(1.0, 'rgba(0, 0, 0, 0.18)');
+
+  // Apply with multiply for more depth
+  ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
+  ctx.globalCompositeOperation = 'source-over';
 } 
