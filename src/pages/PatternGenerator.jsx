@@ -3,10 +3,12 @@ import { usePatternState } from '../hooks/usePatternState';
 import Sidebar from '../components/pattern/Sidebar';
 import PatternPreview from '../components/pattern/PatternPreview';
 import CanvasErrorBoundary from '../components/CanvasErrorBoundary';
-import { generateBackgroundPattern, compositeOverlayOnBackground } from '../components/pattern/patternGenerator';
+import { generateBackgroundPattern, compositeOverlayOnBackground, generateGradientBackground } from '../components/pattern/patternGenerator';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { usePatternWorker } from '../hooks/usePatternWorker';
 import ProgressIndicator from '../components/pattern/ProgressIndicator';
+import { ExtractedColorsSuggestion } from '../components/pattern/ExtractedColorsSuggestion';
+import { generateAIBackground, fetchAIPrompts } from '../services/api';
 
 const SIZES_OBJ = {
   '1200x628': { width: 1200, height: 628, name: 'Homepage' },
@@ -125,7 +127,7 @@ export default function PatternGenerator() {
     selectedSizeKey, colors, selectedGenre, images: stateImages, books, isRendering, error,
     hasAutoRendered, emailVariant, overlayText, overlayStyle, patternSeed,
     fontSize, lineHeight, overlayAlpha, activeSizeKey,
-    compositedPatterns, overlayColor, progress, progressMessage
+    compositedPatterns, overlayColor, progress, progressMessage, backgroundStyle
   } = state;
   
   // Ensure stateImages is always an array
@@ -167,6 +169,32 @@ export default function PatternGenerator() {
     actions.setColors(GENRE_COLORS[genre]); // Re-enable automatic color updates on genre change
   }, [GENRE_COLORS, actions]);
 
+  const handleAIBackgroundGenerated = useCallback((dataUrl) => {
+    console.log('🔵 PatternGenerator.handleAIBackgroundGenerated called');
+    console.log('   Length:', dataUrl?.length);
+    console.log('   First 100 chars:', dataUrl?.substring(0, 100));
+    actions.setAIBackground(dataUrl);
+    console.log('   ✅ actions.setAIBackground called');
+  }, [actions]);
+
+  const handleColorsExtracted = useCallback((extractedColors) => {
+    actions.setExtractedColors(extractedColors);
+  }, [actions]);
+
+  const handleUseExtractedColors = useCallback(() => {
+    actions.applyExtractedColors(state.extractedColors);
+  }, [actions, state.extractedColors]);
+
+  const handleAddExtractedColors = useCallback(() => {
+    const mergedColors = [...new Set([...colors, ...state.extractedColors])];
+    actions.setColors(mergedColors);
+    actions.dismissColorSuggestion();
+  }, [actions, colors, state.extractedColors]);
+
+  const handleDismissColorSuggestion = useCallback(() => {
+    actions.dismissColorSuggestion();
+  }, [actions]);
+
   // Helper to get the overlay color (for solid overlays, match batch logic)
   const getBatchOverlayColor = useCallback((objectColors, backgroundColor, seed) => {
     let currentSeed = seed;
@@ -182,8 +210,12 @@ export default function PatternGenerator() {
   // Render/caching logic
   const handleRender = useCallback(async (alphaOverride) => {
     actions.setError(null);
-    if (safeImages.length === 0) {
+    if (backgroundStyle !== 'gradients' && backgroundStyle !== 'ai' && safeImages.length === 0) {
       actions.setError('Please upload at least one image.');
+      return;
+    }
+    if (backgroundStyle === 'ai' && !state.aiBackgroundDataUrl) {
+      actions.setError('Please generate an AI background first.');
       return;
     }
     if (colors.length < 2) {
@@ -280,12 +312,61 @@ export default function PatternGenerator() {
         actions.setProgressMessage('Generating background patterns...');
         
         const newBackgroundCache = {};
-        for (let i = 0; i < targetSizes.length; i++) {
-          const size = targetSizes[i];
-          const key = `${size.width}x${size.height}`;
-          actions.setProgress(40 + (i / targetSizes.length) * 30);
-          actions.setProgressMessage(`Generating ${size.name} background...`);
-          newBackgroundCache[key] = await generateBackgroundPattern(safeImages, objectColors, backgroundColor, size, patternSeed);
+        if (backgroundStyle === 'gradients') {
+          actions.setProgress(45);
+          actions.setProgressMessage('Generating gradient backgrounds...');
+          const gradResults = await generateGradientBackground(colors, targetSizes, Math.random());
+          Object.assign(newBackgroundCache, gradResults);
+        } else if (backgroundStyle === 'ai') {
+          // Generate NEW AI background each render
+          actions.setProgress(45);
+          actions.setProgressMessage('Generating AI background...');
+
+          try {
+            isGeneratingDuringRender.current = true; // Prevent auto-render loop
+
+            // Fetch available prompts and pick a random one
+            const promptsData = await fetchAIPrompts();
+            const prompts = promptsData.prompts || [];
+            if (prompts.length === 0) {
+              throw new Error('No AI prompts available');
+            }
+            const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+            console.log('🎲 Picked random prompt:', randomPrompt.name);
+
+            // Generate with current colors (server will pick random color from palette)
+            const result = await generateAIBackground(randomPrompt.id, colors, 'firefly');
+            const newAIBackground = result.imageDataUrl;
+            console.log('✅ Generated new AI background, length:', newAIBackground.length);
+            console.log('📝 First 100 chars:', newAIBackground.substring(0, 100));
+
+            // Update state so future renders can access it
+            actions.setAIBackground(newAIBackground);
+
+            // Use the new background for all sizes
+            for (const size of targetSizes) {
+              const key = `${size.width}x${size.height}`;
+              newBackgroundCache[key] = newAIBackground;
+            }
+
+            // Reset flag after a delay to allow future modal generations to auto-render
+            setTimeout(() => {
+              isGeneratingDuringRender.current = false;
+            }, 500);
+          } catch (error) {
+            console.error('AI generation failed:', error);
+            actions.setError(`AI generation failed: ${error.message}`);
+            isGeneratingDuringRender.current = false;
+            return;
+          }
+        } else {
+          for (let i = 0; i < targetSizes.length; i++) {
+            const size = targetSizes[i];
+            const key = `${size.width}x${size.height}`;
+            actions.setProgress(40 + (i / targetSizes.length) * 30);
+            actions.setProgressMessage(`Generating ${size.name} background...`);
+            newBackgroundCache[key] = await generateBackgroundPattern(safeImages, objectColors, backgroundColor, size, Math.random());
+          }
         }
         actions.setBackgroundCache(newBackgroundCache);
         
@@ -383,7 +464,7 @@ export default function PatternGenerator() {
     } finally {
       actions.setIsRendering(false);
     }
-  }, [safeImages, colors, selectedSizeKey, overlayAlpha, overlayStyle, overlayColor, patternSeed, getBatchOverlayColor, isWorkerAvailable, generatePatternBatch, COLLECTIONS, SIZES, books, emailVariant, fontSize, lineHeight, overlayText, forceMainThread, actions]);
+  }, [safeImages, colors, selectedSizeKey, overlayAlpha, overlayStyle, overlayColor, patternSeed, getBatchOverlayColor, isWorkerAvailable, generatePatternBatch, COLLECTIONS, SIZES, books, emailVariant, fontSize, lineHeight, overlayText, forceMainThread, actions, backgroundStyle]);
 
   // Auto-render on first load
   useEffect(() => {
@@ -405,6 +486,18 @@ export default function PatternGenerator() {
       }, 100); // Small delay to ensure all initialization is complete
     }
   }, [hasAutoRendered, safeImages.length, colors.length, overlayColor, colors, patternSeed, getBatchOverlayColor, actions, handleRender]);
+
+  // Auto-render when AI background is generated from modal ONLY
+  const isGeneratingDuringRender = useRef(false);
+  useEffect(() => {
+    // Only auto-render if background was set externally (from modal), not during a render
+    if (state.aiBackgroundDataUrl && backgroundStyle === 'ai' && !isGeneratingDuringRender.current) {
+      console.log('🎨 AI background changed from modal, triggering render...');
+      setTimeout(() => {
+        handleRender();
+      }, 100);
+    }
+  }, [state.aiBackgroundDataUrl, backgroundStyle, handleRender]);
 
   // Generate new seed and overlay color when images or colors change
   useEffect(() => {
@@ -482,6 +575,8 @@ export default function PatternGenerator() {
         genreColors={GENRE_COLORS}
         images={safeImages}
         setImages={actions.setImages}
+        backgroundStyle={backgroundStyle}
+        setBackgroundStyle={actions.setBackgroundStyle}
         books={books}
         setBooks={actions.setBooks}
         addBooks={actions.addBooks}
@@ -502,6 +597,8 @@ export default function PatternGenerator() {
         overlayAlpha={overlayAlpha}
         setOverlayAlpha={actions.setOverlayAlpha}
         onRenderWithAlpha={handleSidebarRenderWithAlpha}
+        onAIBackgroundGenerated={handleAIBackgroundGenerated}
+        onColorsExtracted={handleColorsExtracted}
       />
       <CanvasErrorBoundary 
         onError={(error) => actions.setError(`Canvas error: ${error.message}`)}
@@ -521,6 +618,14 @@ export default function PatternGenerator() {
         progress={progress}
         message={progressMessage}
       />
+      {state.showColorSuggestion && (
+        <ExtractedColorsSuggestion
+          colors={state.extractedColors}
+          onUse={handleUseExtractedColors}
+          onAdd={handleAddExtractedColors}
+          onDismiss={handleDismissColorSuggestion}
+        />
+      )}
     </div>
   );
 }

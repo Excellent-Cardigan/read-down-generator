@@ -4,11 +4,17 @@ import { fileURLToPath } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // eslint-disable-next-line no-undef
-  base: process.env.NODE_ENV === 'production' ? '/read-down-generator/' : '/',
+  base: '/',
   plugins: [react()],
   server: {
-    allowedHosts: true
+    host: '0.0.0.0',
+    allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
+      }
+    }
   },
   resolve: {
     alias: {

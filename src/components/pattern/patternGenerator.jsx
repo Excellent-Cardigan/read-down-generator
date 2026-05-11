@@ -495,6 +495,95 @@ export async function generatePatternFromSettings(uploadedImages, objectColors, 
   return croppedPatterns;
 }
 
+// Generate a blurry, grainy, flowing gradient background from palette colors
+export async function generateGradientBackground(colors, targetSizes, seed = Math.random()) {
+  const MASTER_SIZE = 2400;
+
+  let currentSeed = seed;
+  const nextRandom = () => {
+    currentSeed = seededRandom(currentSeed * 9999);
+    return currentSeed;
+  };
+
+  const pickColor = () => colors[Math.floor(nextRandom() * colors.length)];
+  const c1 = pickColor();
+  const c2 = pickColor();
+  const c3 = pickColor();
+
+  const gradCanvas = document.createElement('canvas');
+  gradCanvas.width = MASTER_SIZE;
+  gradCanvas.height = MASTER_SIZE;
+  const gradCtx = gradCanvas.getContext('2d');
+
+  gradCtx.fillStyle = c1;
+  gradCtx.fillRect(0, 0, MASTER_SIZE, MASTER_SIZE);
+
+  const blobCount = 4 + Math.floor(nextRandom() * 3);
+  const blobColors = [c1, c2, c3];
+
+  for (let i = 0; i < blobCount; i++) {
+    const x = nextRandom() * MASTER_SIZE;
+    const y = nextRandom() * MASTER_SIZE;
+    const radius = 600 + nextRandom() * 600;
+    const color = blobColors[Math.floor(nextRandom() * blobColors.length)];
+    const alpha = 0.6 + nextRandom() * 0.35;
+
+    const rgb = hexToRgb(color);
+    if (!rgb) continue;
+
+    const grad = gradCtx.createRadialGradient(x, y, 0, x, y, radius);
+    grad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`);
+    grad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
+    gradCtx.fillStyle = grad;
+    gradCtx.fillRect(0, 0, MASTER_SIZE, MASTER_SIZE);
+  }
+
+  const blurCanvas = document.createElement('canvas');
+  blurCanvas.width = MASTER_SIZE;
+  blurCanvas.height = MASTER_SIZE;
+  const blurCtx = blurCanvas.getContext('2d');
+  blurCtx.filter = 'blur(80px)';
+  blurCtx.drawImage(gradCanvas, 0, 0);
+  blurCtx.filter = 'none';
+
+  const imageData = blurCtx.getImageData(0, 0, MASTER_SIZE, MASTER_SIZE);
+  const data = imageData.data;
+  const grainAmount = 7;
+  for (let i = 0; i < data.length; i += 4) {
+    const noise = (Math.random() - 0.5) * grainAmount * 2;
+    data[i] = Math.min(255, Math.max(0, data[i] + noise));
+    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+  }
+  blurCtx.putImageData(imageData, 0, 0);
+
+  const results = {};
+  const cropCanvas = document.createElement('canvas');
+  const cropCtx = cropCanvas.getContext('2d');
+
+  for (const size of targetSizes) {
+    cropCanvas.width = size.width;
+    cropCanvas.height = size.height;
+    cropCtx.clearRect(0, 0, size.width, size.height);
+
+    const sourceX = Math.max(0, (MASTER_SIZE - size.width) / 2);
+    const sourceY = Math.max(0, (MASTER_SIZE - size.height) / 2);
+
+    if (size.width > MASTER_SIZE || size.height > MASTER_SIZE) {
+      const scale = Math.max(size.width / MASTER_SIZE, size.height / MASTER_SIZE);
+      const scaledW = MASTER_SIZE * scale;
+      const scaledH = MASTER_SIZE * scale;
+      cropCtx.drawImage(blurCanvas, (size.width - scaledW) / 2, (size.height - scaledH) / 2, scaledW, scaledH);
+    } else {
+      cropCtx.drawImage(blurCanvas, sourceX, sourceY, size.width, size.height, 0, 0, size.width, size.height);
+    }
+
+    results[`${size.width}x${size.height}`] = cropCanvas.toDataURL('image/png');
+  }
+
+  return results;
+}
+
 // 1. Generate background pattern for a given size (no overlay)
 export async function generateBackgroundPattern(uploadedImages, objectColors, backgroundColor, size, seed = Math.random(), blurAmount = 0, ditherAmount = 0) {
   const MASTER_SIZE = 2400;

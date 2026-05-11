@@ -5,6 +5,7 @@
 export const PATTERN_ACTIONS = {
   // UI State
   SET_SELECTED_SIZE_KEY: 'SET_SELECTED_SIZE_KEY',
+  SET_BACKGROUND_STYLE: 'SET_BACKGROUND_STYLE',
   SET_ACTIVE_SIZE_KEY: 'SET_ACTIVE_SIZE_KEY',
   SET_IS_RENDERING: 'SET_IS_RENDERING',
   SET_ERROR: 'SET_ERROR',
@@ -39,6 +40,17 @@ export const PATTERN_ACTIONS = {
   // Batch Operations
   RESET_FOR_NEW_RENDER: 'RESET_FOR_NEW_RENDER',
   INITIALIZE_STATE: 'INITIALIZE_STATE',
+
+  // Color Extraction
+  SET_EXTRACTED_COLORS: 'SET_EXTRACTED_COLORS',
+  APPLY_EXTRACTED_COLORS: 'APPLY_EXTRACTED_COLORS',
+  DISMISS_COLOR_SUGGESTION: 'DISMISS_COLOR_SUGGESTION',
+
+  // AI Background Generation
+  SET_AI_PROMPTS: 'SET_AI_PROMPTS',
+  SET_AI_GENERATING: 'SET_AI_GENERATING',
+  SET_AI_BACKGROUND: 'SET_AI_BACKGROUND',
+  SET_AI_ERROR: 'SET_AI_ERROR',
 };
 
 // Initial State
@@ -51,6 +63,7 @@ export const createInitialState = (GENRE_COLORS_OBJ, defaultImages, defaultBooks
   hasAutoRendered: false,
   progress: 0,
   progressMessage: 'Ready to generate...',
+  backgroundStyle: null,
   
   // Pattern Data
   colors: GENRE_COLORS_OBJ["Romance"],
@@ -71,6 +84,16 @@ export const createInitialState = (GENRE_COLORS_OBJ, defaultImages, defaultBooks
   // Cache
   backgroundCache: {},
   compositedPatterns: {},
+
+  // Color Extraction
+  extractedColors: [],
+  showColorSuggestion: false,
+
+  // AI Background Generation
+  aiPrompts: [],
+  isGeneratingAI: false,
+  aiBackgroundDataUrl: null,
+  aiError: null,
 });
 
 // Reducer Function
@@ -87,6 +110,9 @@ export function patternReducer(state, action) {
       
     case PATTERN_ACTIONS.SET_ACTIVE_SIZE_KEY:
       return { ...state, activeSizeKey: action.payload };
+
+    case PATTERN_ACTIONS.SET_BACKGROUND_STYLE:
+      return { ...state, backgroundStyle: action.payload };
       
     case PATTERN_ACTIONS.SET_IS_RENDERING:
       return { ...state, isRendering: action.payload };
@@ -169,7 +195,58 @@ export function patternReducer(state, action) {
         backgroundCache: {},
         compositedPatterns: {},
       };
-    
+
+    // Color Extraction Actions
+    case PATTERN_ACTIONS.SET_EXTRACTED_COLORS:
+      return {
+        ...state,
+        extractedColors: action.payload,
+        showColorSuggestion: action.payload.length > 0,
+      };
+
+    case PATTERN_ACTIONS.APPLY_EXTRACTED_COLORS:
+      return {
+        ...state,
+        colors: action.payload,
+        showColorSuggestion: false,
+      };
+
+    case PATTERN_ACTIONS.DISMISS_COLOR_SUGGESTION:
+      return {
+        ...state,
+        showColorSuggestion: false,
+      };
+
+    // AI Background Generation Actions
+    case PATTERN_ACTIONS.SET_AI_PROMPTS:
+      return { ...state, aiPrompts: action.payload };
+
+    case PATTERN_ACTIONS.SET_AI_GENERATING:
+      return { ...state, isGeneratingAI: action.payload };
+
+    case PATTERN_ACTIONS.SET_AI_BACKGROUND:
+      console.log('🟢 Reducer SET_AI_BACKGROUND:', {
+        payloadLength: action.payload?.length,
+        first50: action.payload?.substring(0, 50),
+        clearingCaches: true
+      });
+      return {
+        ...state,
+        aiBackgroundDataUrl: action.payload,
+        isGeneratingAI: false,
+        aiError: null,
+        // Clear caches so the new AI background gets rendered
+        backgroundCache: {},
+        compositedPatterns: {},
+      };
+
+    case PATTERN_ACTIONS.SET_AI_ERROR:
+      return {
+        ...state,
+        aiError: action.payload,
+        isGeneratingAI: false,
+      };
+
     // Batch Operations
     case PATTERN_ACTIONS.RESET_FOR_NEW_RENDER:
       return {
@@ -194,6 +271,7 @@ export const createActions = (dispatch) => ({
   // UI Actions
   setSelectedSizeKey: (key) => dispatch({ type: PATTERN_ACTIONS.SET_SELECTED_SIZE_KEY, payload: key }),
   setActiveSizeKey: (key) => dispatch({ type: PATTERN_ACTIONS.SET_ACTIVE_SIZE_KEY, payload: key }),
+  setBackgroundStyle: (style) => dispatch({ type: PATTERN_ACTIONS.SET_BACKGROUND_STYLE, payload: style }),
   setIsRendering: (rendering) => dispatch({ type: PATTERN_ACTIONS.SET_IS_RENDERING, payload: rendering }),
   setError: (error) => dispatch({ type: PATTERN_ACTIONS.SET_ERROR, payload: error }),
   setHasAutoRendered: (rendered) => dispatch({ type: PATTERN_ACTIONS.SET_HAS_AUTO_RENDERED, payload: rendered }),
@@ -227,6 +305,17 @@ export const createActions = (dispatch) => ({
   // Batch Actions
   resetForNewRender: () => dispatch({ type: PATTERN_ACTIONS.RESET_FOR_NEW_RENDER }),
   initializeState: (state) => dispatch({ type: PATTERN_ACTIONS.INITIALIZE_STATE, payload: state }),
+
+  // Color Extraction Actions
+  setExtractedColors: (colors) => dispatch({ type: PATTERN_ACTIONS.SET_EXTRACTED_COLORS, payload: colors }),
+  applyExtractedColors: (colors) => dispatch({ type: PATTERN_ACTIONS.APPLY_EXTRACTED_COLORS, payload: colors }),
+  dismissColorSuggestion: () => dispatch({ type: PATTERN_ACTIONS.DISMISS_COLOR_SUGGESTION }),
+
+  // AI Background Generation Actions
+  setAIPrompts: (prompts) => dispatch({ type: PATTERN_ACTIONS.SET_AI_PROMPTS, payload: prompts }),
+  setAIGenerating: (generating) => dispatch({ type: PATTERN_ACTIONS.SET_AI_GENERATING, payload: generating }),
+  setAIBackground: (dataUrl) => dispatch({ type: PATTERN_ACTIONS.SET_AI_BACKGROUND, payload: dataUrl }),
+  setAIError: (error) => dispatch({ type: PATTERN_ACTIONS.SET_AI_ERROR, payload: error }),
 });
 
 // Selectors for computed values

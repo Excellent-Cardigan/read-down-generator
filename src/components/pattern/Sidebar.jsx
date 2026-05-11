@@ -1,16 +1,19 @@
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import SizeSelector from './SizeSelector';
 import GenreSelector from './GenreSelector';
 import ColorPalette from './ColorPalette';
-import ImageUploader from './ImageUploader';
 import BookUploader from './BookUploader';
 import KeyboardShortcutsModal from './KeyboardShortcutsModal';
+import FolderImagePicker from './FolderImagePicker';
+import UploadModal from './UploadModal';
+import { AIPromptPicker } from './AIPromptPicker';
+import { floralImages, shapesImages } from '../../data/backgroundStyles';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Wand2, Loader2, Terminal, Scaling, Images, Download, Book, LayoutTemplate, Type, EyeOff, Square, CheckSquare, Palette } from 'lucide-react';
+import { Wand2, Loader2, Terminal, Scaling, Download, Book, LayoutTemplate, Type, EyeOff, Square, CheckSquare, Palette, Layers, Upload, Sparkles } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -18,6 +21,7 @@ import PropTypes from 'prop-types';
 import { useDebounce } from '../../hooks/useDebounce';
 import summerPaletteData from '../../data/2025-summer-palette-by-genre.json';
 import fallPaletteData from '../../data/2025-fall-palette-by-genre.json';
+import { fetchAIPrompts, generateAIBackground } from '@/services/api';
 
 const DownloadButtons = React.memo(function DownloadButtons({
   currentPatterns, patternKeys, isCollection
@@ -79,6 +83,8 @@ function Sidebar({
   // genreColors, // available but using currentPalette instead
   images,
   setImages,
+  backgroundStyle,
+  setBackgroundStyle,
   books,
   setBooks,
   addBooks,
@@ -99,8 +105,56 @@ function Sidebar({
   overlayAlpha,
   // setOverlayAlpha, // parameter available but not currently used in this component
   onRenderWithAlpha,
+  onAIBackgroundGenerated,
+  onColorsExtracted,
 }) {
   const [paletteSeason, setPaletteSeason] = React.useState('Summer');
+  const [pickerStyle, setPickerStyle] = React.useState(null);
+  const [uploadOpen, setUploadOpen] = React.useState(false);
+  const [showAIPromptPicker, setShowAIPromptPicker] = useState(false);
+  const [aiPrompts, setAIPrompts] = useState([]);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  useEffect(() => {
+    fetchAIPrompts()
+      .then(data => setAIPrompts(data.prompts))
+      .catch(err => console.error('Failed to load AI prompts:', err));
+  }, []);
+
+  const handleStyleClick = (style) => {
+    if (style === 'gradients') {
+      setBackgroundStyle('gradients');
+    } else if (style === 'ai') {
+      setShowAIPromptPicker(true);
+    } else {
+      setPickerStyle(style);
+    }
+  };
+
+  const handleAIGenerate = async (promptId, engine) => {
+    setIsGeneratingAI(true);
+    console.log('🎨 AI Generation - Colors being sent:', colors);
+    console.log('🎲 Generating with random color selection...');
+
+    try {
+      const result = await generateAIBackground(promptId, colors, engine);
+      console.log('✅ AI Generation - New background received, length:', result.imageDataUrl.length);
+      console.log('📝 First 50 chars:', result.imageDataUrl.substring(0, 50));
+
+      setBackgroundStyle('ai');
+      setShowAIPromptPicker(false);
+      if (onAIBackgroundGenerated) {
+        onAIBackgroundGenerated(result.imageDataUrl);
+        console.log('✅ Called onAIBackgroundGenerated');
+      }
+    } catch (error) {
+      console.error('AI generation failed:', error);
+      alert(`Failed to generate background: ${error.message}`);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   
   // Choose the palette based on toggle
   const currentPalette = paletteSeason === 'Summer' ? summerPaletteData : fallPaletteData;
@@ -164,14 +218,14 @@ function Sidebar({
       }}
     >
       <header className="pc-sidebar-header px-5 pt-4">
-        <h1 className="text-2xl font-bold text-foreground/90 tracking-tight">Pattern Craft</h1>
-        <p className="text-sm text-muted-foreground">Create unique patterns from your assets.</p>
+        <h1 className="text-2xl font-bold text-foreground/90 tracking-tight">Background Generator</h1>
+        <p className="text-sm text-muted-foreground">Create unique background patterns for your assets.</p>
       </header>
       {/* Pattern Generation Settings - These trigger full re-renders */}
       <div className="pc-pattern-generation bg-card rounded-xl border border-border p-4 space-y-4 mx-4">
         <div className="flex items-center gap-2 mb-2">
           <Wand2 className="w-5 h-5 text-muted-foreground" />
-          <Label className="text-sm font-medium text-muted-foreground">Pattern Generation</Label>
+          <Label className="text-sm font-medium text-muted-foreground">Background Generation</Label>
         </div>
         
         <div className="pc-output-size space-y-2">
@@ -240,11 +294,67 @@ function Sidebar({
         </div>
         
         <div className="pc-upload-section space-y-2">
-           <div className="flex items-center gap-2">
-            <Images className="w-5 h-5 text-muted-foreground" />
-            <Label className="text-sm font-medium text-muted-foreground">Upload Objects</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Layers className="w-5 h-5 text-muted-foreground" />
+              <Label className="text-sm font-medium text-muted-foreground">Background Style</Label>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setUploadOpen(true)}
+              title="Upload custom images"
+            >
+              <Upload className="w-4 h-4" />
+            </Button>
           </div>
-          <ImageUploader images={images} setImages={setImages} />
+          <div className="flex gap-2">
+            {['floral', 'shapes', 'gradients', 'ai'].map(style => (
+              <button
+                key={style}
+                onClick={() => handleStyleClick(style)}
+                className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors flex items-center gap-1 ${
+                  backgroundStyle === style
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted-foreground/10 text-muted-foreground hover:bg-muted-foreground/20'
+                }`}
+              >
+                {style === 'ai' && <Sparkles className="w-3 h-3" />}
+                {style}
+              </button>
+            ))}
+          </div>
+
+          <FolderImagePicker
+            open={pickerStyle !== null}
+            onOpenChange={(v) => { if (!v) setPickerStyle(null); }}
+            images={pickerStyle === 'floral' ? floralImages : shapesImages}
+            title={pickerStyle === 'floral' ? 'Select Floral Images' : 'Select Shape Images'}
+            onApply={(selected) => {
+              setImages(selected);
+              setBackgroundStyle(pickerStyle);
+            }}
+          />
+
+          <AIPromptPicker
+            open={showAIPromptPicker}
+            onOpenChange={setShowAIPromptPicker}
+            prompts={aiPrompts}
+            colors={colors}
+            onSelect={handleAIGenerate}
+            isGenerating={isGeneratingAI}
+          />
+
+          <UploadModal
+            open={uploadOpen}
+            onOpenChange={setUploadOpen}
+            images={images}
+            onImagesChange={(imgs) => {
+              setImages(imgs);
+              setBackgroundStyle('custom');
+            }}
+          />
         </div>
       </div>
 
@@ -388,7 +498,12 @@ function Sidebar({
               <Book className="w-5 h-5 text-muted-foreground" />
               <Label className="text-sm font-medium text-muted-foreground">Book Covers</Label>
             </div>
-            <BookUploader books={books || []} setBooks={setBooks} addBooks={addBooks} />
+            <BookUploader
+              books={books || []}
+              setBooks={setBooks}
+              addBooks={addBooks}
+              onColorsExtracted={onColorsExtracted}
+            />
           </div>
         ) : null}
       </div>
@@ -422,7 +537,7 @@ function Sidebar({
         {/* Render Pattern button moved here to use onRenderWithAlpha */}
         <Button
           onClick={() => onRenderWithAlpha(pendingOverlayAlpha)}
-          disabled={isRendering || images.length === 0}
+          disabled={isRendering || (images.length === 0 && backgroundStyle !== 'gradients')}
           className="pc-render-btn w-full py-5 text-md font-semibold rounded-xl transition-all duration-300 bg-black text-white hover:bg-[#FA6400]"
         >
           {isRendering ? (
@@ -465,6 +580,8 @@ Sidebar.propTypes = {
   genreColors: PropTypes.object.isRequired,
   images: PropTypes.array.isRequired,
   setImages: PropTypes.func.isRequired,
+  backgroundStyle: PropTypes.string,
+  setBackgroundStyle: PropTypes.func.isRequired,
   books: PropTypes.array.isRequired,
   setBooks: PropTypes.func.isRequired,
   onRender: PropTypes.func.isRequired,

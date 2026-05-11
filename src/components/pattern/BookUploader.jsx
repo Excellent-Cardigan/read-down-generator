@@ -2,10 +2,12 @@ import React, { useCallback, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { extractColorsFromImage } from '@/services/api';
 
-const BookUploader = React.memo(function BookUploader({ books = [], setBooks, addBooks }) {
+const BookUploader = React.memo(function BookUploader({ books = [], setBooks, addBooks, onColorsExtracted }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExtractingColors, setIsExtractingColors] = useState(false);
   const debounceTimeout = useRef(null);
 
   const handleDragEnter = useCallback((e) => {
@@ -35,15 +37,15 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
     return (newFiles || []).filter(file => !existing.has(file.name + '-' + file.size));
   }, [books]);
 
-  const processFiles = useCallback((files) => {
+  const processFiles = useCallback(async (files) => {
     if (!setBooks) return;
     const uniqueFiles = deduplicate(files);
     if (!uniqueFiles || uniqueFiles.length === 0) return;
-    
+
     setIsLoading(true);
     let processed = 0;
     const newBooks = [];
-    
+
     uniqueFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -59,6 +61,22 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
             setBooks([...currentBooks, ...newBooks]);
           }
           setIsLoading(false);
+
+          // Extract colors from first uploaded book if onColorsExtracted callback exists
+          if (onColorsExtracted && uniqueFiles.length > 0) {
+            setIsExtractingColors(true);
+            extractColorsFromImage(uniqueFiles[0])
+              .then(data => {
+                const hexColors = data.colors.map(c => c.hex);
+                onColorsExtracted(hexColors);
+              })
+              .catch(err => {
+                console.error('Color extraction failed:', err);
+              })
+              .finally(() => {
+                setIsExtractingColors(false);
+              });
+          }
         }
       };
       reader.onerror = () => {
@@ -79,7 +97,7 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
       };
       reader.readAsDataURL(file);
     });
-  }, [books, setBooks, addBooks, deduplicate]);
+  }, [books, setBooks, addBooks, deduplicate, onColorsExtracted]);
 
   // Debounced file processing
   const debouncedProcessFiles = useCallback((files) => {
@@ -139,10 +157,12 @@ const BookUploader = React.memo(function BookUploader({ books = [], setBooks, ad
         </div>
         <p className="text-sm text-gray-600 font-semibold">Click or Drag books</p>
         <p className="text-xs text-gray-500">JPG, JPEG, TIF formats</p>
-        {isLoading && (
+        {(isLoading || isExtractingColors) && (
           <div className="flex justify-center items-center mt-2">
             <Loader2 className="animate-spin w-5 h-5 text-primary" />
-            <span className="ml-2 text-xs text-primary">Processing...</span>
+            <span className="ml-2 text-xs text-primary">
+              {isExtractingColors ? 'Extracting colors...' : 'Processing...'}
+            </span>
           </div>
         )}
       </div>
@@ -184,6 +204,7 @@ BookUploader.propTypes = {
   })),
   setBooks: PropTypes.func.isRequired,
   addBooks: PropTypes.func,
+  onColorsExtracted: PropTypes.func,
 };
 
 export default BookUploader;

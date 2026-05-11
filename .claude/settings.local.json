@@ -25,7 +25,10 @@
       "Bash(dir:*)",
       "Bash(findstr:*)",
       "Bash(sort:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(start \"\" \"src\\\\components\\\\pattern\\\\Sidebar.jsx\")",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Stop-Process *)"
     ],
     "deny": []
   }
