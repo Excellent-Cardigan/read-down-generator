@@ -114,7 +114,6 @@ function Sidebar({
   const [showAIPromptPicker, setShowAIPromptPicker] = useState(false);
   const [aiPrompts, setAIPrompts] = useState([]);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [lastAIPromptId, setLastAIPromptId] = useState(null);
 
   useEffect(() => {
     fetchAIPrompts()
@@ -144,9 +143,8 @@ function Sidebar({
 
       setBackgroundStyle('ai');
       setShowAIPromptPicker(false);
-      setLastAIPromptId(promptId);
       if (onAIBackgroundGenerated) {
-        onAIBackgroundGenerated(result.imageDataUrl);
+        onAIBackgroundGenerated(result.imageDataUrl, promptId);
         console.log('✅ Called onAIBackgroundGenerated');
       }
     } catch (error) {
@@ -155,12 +153,6 @@ function Sidebar({
     } finally {
       setIsGeneratingAI(false);
     }
-  };
-
-  const handleAIRegenerate = async () => {
-    if (!lastAIPromptId) return;
-    console.log('🔄 Regenerating with same prompt:', lastAIPromptId);
-    await handleAIGenerate(lastAIPromptId, 'firefly');
   };
 
   
@@ -317,7 +309,7 @@ function Sidebar({
               <Upload className="w-4 h-4" />
             </Button>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2">
             {['floral', 'shapes', 'gradients', 'ai'].map(style => (
               <button
                 key={style}
@@ -332,21 +324,6 @@ function Sidebar({
                 {style}
               </button>
             ))}
-            {backgroundStyle === 'ai' && lastAIPromptId && (
-              <button
-                onClick={handleAIRegenerate}
-                disabled={isGeneratingAI}
-                className="px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Regenerate with same prompt, randomized colors"
-              >
-                {isGeneratingAI ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Wand2 className="w-3 h-3" />
-                )}
-                Regenerate
-              </button>
-            )}
           </div>
 
           <FolderImagePicker

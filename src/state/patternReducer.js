@@ -51,6 +51,7 @@ export const PATTERN_ACTIONS = {
   SET_AI_GENERATING: 'SET_AI_GENERATING',
   SET_AI_BACKGROUND: 'SET_AI_BACKGROUND',
   SET_AI_ERROR: 'SET_AI_ERROR',
+  SET_LAST_AI_PROMPT_ID: 'SET_LAST_AI_PROMPT_ID',
 };
 
 // Initial State
@@ -94,6 +95,7 @@ export const createInitialState = (GENRE_COLORS_OBJ, defaultImages, defaultBooks
   isGeneratingAI: false,
   aiBackgroundDataUrl: null,
   aiError: null,
+  lastAIPromptId: null,
 });
 
 // Reducer Function
@@ -240,6 +242,12 @@ export function patternReducer(state, action) {
         compositedPatterns: {},
       };
 
+    case PATTERN_ACTIONS.SET_LAST_AI_PROMPT_ID:
+      return {
+        ...state,
+        lastAIPromptId: action.payload,
+      };
+
     case PATTERN_ACTIONS.SET_AI_ERROR:
       return {
         ...state,
@@ -316,6 +324,7 @@ export const createActions = (dispatch) => ({
   setAIGenerating: (generating) => dispatch({ type: PATTERN_ACTIONS.SET_AI_GENERATING, payload: generating }),
   setAIBackground: (dataUrl) => dispatch({ type: PATTERN_ACTIONS.SET_AI_BACKGROUND, payload: dataUrl }),
   setAIError: (error) => dispatch({ type: PATTERN_ACTIONS.SET_AI_ERROR, payload: error }),
+  setLastAIPromptId: (promptId) => dispatch({ type: PATTERN_ACTIONS.SET_LAST_AI_PROMPT_ID, payload: promptId }),
 });
 
 // Selectors for computed values

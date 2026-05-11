@@ -169,11 +169,13 @@ export default function PatternGenerator() {
     actions.setColors(GENRE_COLORS[genre]); // Re-enable automatic color updates on genre change
   }, [GENRE_COLORS, actions]);
 
-  const handleAIBackgroundGenerated = useCallback((dataUrl) => {
+  const handleAIBackgroundGenerated = useCallback((dataUrl, promptId) => {
     console.log('🔵 PatternGenerator.handleAIBackgroundGenerated called');
     console.log('   Length:', dataUrl?.length);
+    console.log('   Prompt ID:', promptId);
     console.log('   First 100 chars:', dataUrl?.substring(0, 100));
     actions.setAIBackground(dataUrl);
+    actions.setLastAIPromptId(promptId);
     console.log('   ✅ actions.setAIBackground called');
   }, [actions]);
 
@@ -318,19 +320,32 @@ export default function PatternGenerator() {
           const gradResults = await generateGradientBackground(colors, targetSizes, Math.random());
           Object.assign(newBackgroundCache, gradResults);
         } else if (backgroundStyle === 'ai') {
-          // Use existing AI background from state (generated via modal)
+          // Regenerate AI background with same prompt but randomized colors
           actions.setProgress(45);
-          actions.setProgressMessage('Using AI background...');
+          actions.setProgressMessage('Generating AI background...');
 
-          if (!state.aiBackgroundDataUrl) {
-            actions.setError('No AI background available. Please generate one first.');
+          if (!state.lastAIPromptId) {
+            actions.setError('No AI prompt selected. Please generate a background first.');
             return;
           }
 
-          // Use the existing AI background for all sizes
-          for (const size of targetSizes) {
-            const key = `${size.width}x${size.height}`;
-            newBackgroundCache[key] = state.aiBackgroundDataUrl;
+          try {
+            console.log('🔄 Regenerating AI background with prompt:', state.lastAIPromptId);
+            const result = await generateAIBackground(state.lastAIPromptId, colors, 'firefly');
+            const newAIBackground = result.imageDataUrl;
+            console.log('✅ Generated new AI background, length:', newAIBackground.length);
+
+            actions.setAIBackground(newAIBackground);
+
+            // Use the new background for all sizes
+            for (const size of targetSizes) {
+              const key = `${size.width}x${size.height}`;
+              newBackgroundCache[key] = newAIBackground;
+            }
+          } catch (error) {
+            console.error('AI regeneration failed:', error);
+            actions.setError(`AI generation failed: ${error.message}`);
+            return;
           }
         } else {
           for (let i = 0; i < targetSizes.length; i++) {
