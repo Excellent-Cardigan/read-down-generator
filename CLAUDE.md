@@ -21,7 +21,7 @@ No test suite exists in this project.
 
 **Path alias**: `@/` maps to `src/`
 
-**Deployment**: GitHub Pages at `/read-down-generator/`. The `base` in `vite.config.js` is set conditionally — production builds use that sub-path. The router `basename` in `src/pages/index.jsx` mirrors this. Default images/assets reference `./images/` which resolves relative to the base.
+**Deployment**: Vercel (https://read-down-generator.vercel.app/), auto-deployed from `main` via `vercel.json`. The app is served from the root (`base: '/'` in `vite.config.js`, no router `basename`). Serverless API routes live in `api/` and are served at `/api/*`; locally, `npm run dev` runs the API server on port 3001 and Vite proxies `/api` to it. Default images/assets reference `./images/` which resolves relative to the base.
 
 ### Design tokens
 
